@@ -23,11 +23,30 @@ namespace FBTS
 
         public int terrainVehicleTier = 1;
 
-        // Upgrades bought at starports
-        public bool landerAutopilot;                       // lets the lander fly to the rover on a planet
-        public const float LanderAutopilotCost = 15000f;   // first-pass price; move to the spreadsheet later
+        // Lore fragments found in ruins, in the order found (the captain's log)
+        public readonly List<string> loreFound = new List<string>();
 
-        public float CargoCapacity => hull != null ? hull.cargoUnits : 50f;
+        // Modules bought at starports (ids from the spreadsheet's Upgrades tab)
+        public readonly HashSet<string> upgrades = new HashSet<string>();
+
+        public bool Has(string upgradeId) => upgrades.Contains(upgradeId);
+
+        /// <summary>Sum of the amounts of owned modules with this effect code.</summary>
+        public float UpgradeBonus(string effect)
+        {
+            float total = 0f;
+            foreach (var id in upgrades)
+            {
+                var u = GameData.Upgrade(id);
+                if (u != null && u.effect == effect) total += u.amount;
+            }
+            return total;
+        }
+
+        public float FuelTank => (hull != null ? hull.fuelTank : 40f) + UpgradeBonus("FuelTank");
+        public float CargoCapacity => (hull != null ? hull.cargoUnits : 50f) + UpgradeBonus("Cargo");
+        public float RoverRevealRadius => GameData.T("RoverRevealRadius", 4f) + UpgradeBonus("RevealRadius");
+        public bool LanderAutopilot => Has("LanderAutopilot");
 
         public float CargoUsed
         {
@@ -71,7 +90,7 @@ namespace FBTS
             s.current = s.galaxy.Home;
             s.hull = GameData.Hull("Light survey frigate");
             s.credits = GameData.T("StartCredits", 10000f);
-            s.fuel = s.hull != null ? s.hull.fuelTank : 40f;
+            s.fuel = s.FuelTank;
             return s;
         }
     }

@@ -11,6 +11,9 @@ Press Play in any scene (or run: unity command editor.playmode start --project-p
 - Transitions (scan, land, launch, dock, undock, jump): skip with Space, E, Esc, click, or gamepad A/B.
   Turn them all off with the "Animations" button at the top right.
 
+- Save: F5 or the Save button (quick save). Load: F9 or the Load button. Autosaves on docking and on arriving in a system.
+  Saves live in Unity's persistentDataPath/saves (on Windows: %USERPROFILE%\AppData\LocalLow\<company>\FlightBeyondTheStars\saves).
+
 ## Loop to test
 Scan a planet near Haven -> land -> explore (the surface wraps around the planet and streams in sections) -> collect -> unload at the lander -> launch
 -> fly to the Starport -> dock -> sell -> buy fuel -> open the galaxy map -> jump to Brightmarket (Orrun market, different prices).

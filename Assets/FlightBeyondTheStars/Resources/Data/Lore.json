@@ -1,0 +1,130 @@
+{
+  "items": [
+    {
+      "id": "humans-1",
+      "race": "Humans",
+      "title": "Colony charter fragment",
+      "text": "...and no settlement shall be founded beyond the rim stars, nor any ship sent outward, for any reason. Signed only: 'the First Watch'."
+    },
+    {
+      "id": "humans-2",
+      "race": "Humans",
+      "title": "A child's teaching slate",
+      "text": "'We came from the stars, so we must never look back at them.' The second line has been scratched out by hand, over and over."
+    },
+    {
+      "id": "humans-3",
+      "race": "Humans",
+      "title": "Sealed bulkhead",
+      "text": "A door inscribed in a script older than any human archive. Half of its letters are the same as our own alphabet."
+    },
+    {
+      "id": "noeti-1",
+      "race": "Noeti",
+      "title": "Observation record 4,112",
+      "text": "Light-script on a crystal pane: 'The newcomers arrived in a fleet of sleeping ships. They asked us to forget we had seen them. We agreed. We should not have.'"
+    },
+    {
+      "id": "noeti-2",
+      "race": "Noeti",
+      "title": "Silpon's axiom",
+      "text": "'Every silence is a record of something someone chose not to say.' A founding maxim of Noeti science, carved into the threshold."
+    },
+    {
+      "id": "noeti-3",
+      "race": "Noeti",
+      "title": "Star catalogue",
+      "text": "A catalogue of every star to the galaxy's rim, and one entry beyond it: unnamed, marked only 'origin of the sleepers'."
+    },
+    {
+      "id": "orrun-1",
+      "race": "Orrun Combine",
+      "title": "Ancient ledger page",
+      "text": "Sold to the newcomers: water, seed stock, silence. Price for the last item: to be paid in full, later."
+    },
+    {
+      "id": "orrun-2",
+      "race": "Orrun Combine",
+      "title": "Maxim 1",
+      "text": "'Everything has a price, including the truth. Especially the truth.' Etched above the door of a ruined trade house."
+    },
+    {
+      "id": "orrun-3",
+      "race": "Orrun Combine",
+      "title": "Customs seal",
+      "text": "A seal stamped on cargo of unknown origin: 'manifest withheld at buyer's request'. The buyer's mark is a human handprint."
+    },
+    {
+      "id": "varkesh-1",
+      "race": "Varkesh",
+      "title": "War-song fragment",
+      "text": "'When the sky-killers come they do not burn the world. They close it, door by door, until no one can leave.'"
+    },
+    {
+      "id": "varkesh-2",
+      "race": "Varkesh",
+      "title": "Clan oath stone",
+      "text": "'We swore to stand against the silent ships. The silent ships never came. We swore again, for our children.'"
+    },
+    {
+      "id": "varkesh-3",
+      "race": "Varkesh",
+      "title": "Broken blade",
+      "text": "A ceremonial blade of an alloy no Varkesh forge can make. The grip was shaped for a human hand."
+    },
+    {
+      "id": "murmur-1",
+      "race": "The Murmur",
+      "title": "Resonance shell",
+      "text": "The shell hums when held. Translated, the hum is one phrase repeated in a thousand voices: 'Someone far away is calling its children.'"
+    },
+    {
+      "id": "murmur-2",
+      "race": "The Murmur",
+      "title": "Choir memory",
+      "text": "'Before the first choir there was a song from beyond the edge. We have been answering it in our sleep ever since.'"
+    },
+    {
+      "id": "murmur-3",
+      "race": "The Murmur",
+      "title": "Empty nest",
+      "text": "Thousands of tiny chambers, every one of them facing the galaxy's rim, as if listening."
+    },
+    {
+      "id": "ophane-1",
+      "race": "Ophane",
+      "title": "Scripture of the Watch, verse 9",
+      "text": "'And the Unblinking saw the sleepers fall from the dark, and the dark followed them, patient as stone.'"
+    },
+    {
+      "id": "ophane-2",
+      "race": "Ophane",
+      "title": "A heretic's note",
+      "text": "'The prophecy is not a curse. It is a warning, and we have been reading it backwards.' Signed with a crossed-out eye."
+    },
+    {
+      "id": "ophane-3",
+      "race": "Ophane",
+      "title": "Observatory plate",
+      "text": "A star plate recording one point of light at the rim that brightened every century for ten thousand years."
+    },
+    {
+      "id": "thuum-1",
+      "race": "Thuum",
+      "title": "Growth rings",
+      "text": "A slice of a giant tree. Its rings record a year when every forest on the world stopped growing at once, then went on."
+    },
+    {
+      "id": "thuum-2",
+      "race": "Thuum",
+      "title": "Lullaby",
+      "text": "'Sleep, small one. The stars are doors, and every door is open.' The Thuum have sung it for longer than they can count."
+    },
+    {
+      "id": "thuum-3",
+      "race": "Thuum",
+      "title": "Seed vault",
+      "text": "Seeds from a world the Thuum have never visited, labelled in a human-like script: 'from home, in case'."
+    }
+  ]
+}

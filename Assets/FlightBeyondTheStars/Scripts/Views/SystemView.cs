@@ -46,6 +46,10 @@ namespace FBTS
             ship = Draw.Ship("Ship", root, new Color(0.4f, 0.9f, 1f), 0.6f);
             ship.localPosition = spawn ?? new Vector2(0f, -4f);
             gm.Follow(ship.localPosition, 0f);
+
+            // Autosave on arrival (after a jump, a launch or a load). Day 0 is skipped so starting
+            // a new game never overwrites the previous autosave.
+            if (S.day > 0) gm.AutoSave();
         }
 
         public static Color PlanetColor(PlanetType t)
@@ -126,6 +130,7 @@ namespace FBTS
                     ship.localRotation = Quaternion.Euler(0, 0, 90);
                     docked = true;
                     gm.Say($"Docked at {S.current.name} starport ({S.current.starportRace} market).");
+                    gm.AutoSave();
                 }
             });
         }
@@ -196,44 +201,17 @@ namespace FBTS
             });
         }
 
+        /// <summary>Open the orbital landing map. Fuel and time are spent when the lander actually descends.</summary>
         void Land(Planet p)
         {
             if (!p.Landable) { gm.Say($"{p.name} is a gas giant. No landing possible."); return; }
-            float cost = Rules.LandingFuel(p);
-            if (S.fuel < cost) { gm.Say($"Landing needs {cost:0} fuel; you have {S.fuel:0.0}."); return; }
-
-            Vector2 start = ship.localPosition;
-            float startSize = Cam.orthographicSize;
-            Vector2 dir = (p.Position - start).normalized;
+            if (!p.scanned) { gm.Say("Scan the planet first to map landing sites."); return; }
             Vector2 back = p.Position + new Vector2(0f, -(p.size / 2f + 0.9f));
             velocity = Vector2.zero;
-
-            gm.Play(new Cutscene
-            {
-                duration = 4f,
-                caption = t => t < 0.75f ? $"Descending to {p.name} ({p.gravity:0.0} g)" : "Touchdown",
-                onUpdate = (t, dt) =>
-                {
-                    float a = Cutscene.Smooth(Cutscene.Phase(t, 0f, 0.75f));
-                    Vector2 pos = Vector2.Lerp(start, p.Position, a);
-                    ship.localPosition = pos;
-                    ship.localRotation = Quaternion.Euler(0, 0, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg);
-                    ship.localScale = Vector3.one * Mathf.Lerp(1f, 0.25f, a);
-                    Cam.orthographicSize = Mathf.Lerp(startSize, p.size * 0.8f, a);
-                    gm.Follow(pos, 0f);
-                    gm.FadeColor = Color.black;
-                    gm.FadeAlpha = Cutscene.Phase(t, 0.7f, 1f);
-                },
-                onComplete = () =>
-                {
-                    S.fuel -= cost;
-                    S.day += 1;
-                    gm.FadeColor = Color.black;
-                    gm.FadeAlpha = 1f;
-                    gm.Go(new SurfaceView(p, back));
-                    gm.FadeIn(0.8f);
-                }
-            });
+            gm.FadeColor = Color.black;
+            gm.FadeAlpha = 1f;
+            gm.Go(new OrbitView(p, back));
+            gm.FadeIn(0.5f);
         }
 
         public override void WorldGui()
@@ -250,6 +228,7 @@ namespace FBTS
             var sys = S.current;
             GUILayout.Label(sys.name + " system", gm.Header);
             GUILayout.Label(sys.starportRace != null ? $"Starport: {sys.starportRace} market" : "No starport", gm.Label);
+            GUILayout.Label(sys.territory != null ? $"Territory: {sys.territory}" : "Unclaimed space", gm.Label);
             GUILayout.Label("Fly: WASD / arrows / left stick.  Act: E / Space / A button.  Map: M.", gm.Hint);
             GUILayout.Space(8);
 
@@ -272,8 +251,7 @@ namespace FBTS
                     if (near.minerals.Count > 0) GUILayout.Label("Resources: " + string.Join(", ", near.minerals), gm.Label);
                     if (near.Landable)
                     {
-                        float cost = Rules.LandingFuel(near);
-                        if (gm.Button($"Land (E) - {cost:0} fuel, 1 day", S.fuel >= cost)) Land(near);
+                        if (gm.Button("Choose landing site (E)")) Land(near);
                     }
                     else GUILayout.Label("Too dense to land.", gm.Label);
                 }
@@ -312,31 +290,135 @@ namespace FBTS
             GUILayout.Space(10);
             GUILayout.Label("Fuel", gm.Header);
             float fuelPrice = Rules.FuelPrice(S, sys);
-            float space = S.hull.fuelTank - S.fuel;
-            GUILayout.Label($"Drive crystal fuel @ {fuelPrice:N0} cr per unit. Tank {S.fuel:0.0}/{S.hull.fuelTank:0}.", gm.Label);
+            float space = S.FuelTank - S.fuel;
+            GUILayout.Label($"Drive crystal fuel @ {fuelPrice:N0} cr per unit. Tank {S.fuel:0.0}/{S.FuelTank:0}.", gm.Label);
             int affordable = Mathf.FloorToInt(Mathf.Min(space, S.credits / Mathf.Max(1f, fuelPrice)));
             GUILayout.BeginHorizontal();
             if (gm.Button("Buy 1", affordable >= 1)) BuyFuel(1, fuelPrice);
             if (gm.Button($"Fill ({affordable})", affordable >= 1)) BuyFuel(affordable, fuelPrice);
             GUILayout.EndHorizontal();
 
-            GUILayout.Space(10);
-            GUILayout.Label("Upgrades", gm.Header);
-            if (S.landerAutopilot)
-                GUILayout.Label("Lander Autopilot: installed.", gm.Label);
-            else
-            {
-                GUILayout.Label("Lander Autopilot: call your lander to the rover anywhere on a planet (costs ship fuel each use).", gm.Label);
-                if (gm.Button($"Buy ({GameState.LanderAutopilotCost:N0} cr)", S.credits >= GameState.LanderAutopilotCost))
-                {
-                    S.credits -= GameState.LanderAutopilotCost;
-                    S.landerAutopilot = true;
-                    gm.Say("Lander Autopilot installed.");
-                }
-            }
+            TrainingGui();
+            ModulesGui();
+            RoverGui();
+            if (sys.starportRace == "Humans") ShipyardGui();
             GUILayout.EndScrollView();
 
             if (gm.Button("Undock")) Undock();
+        }
+
+        // ---------------------------------------------------------------- Shop
+
+        /// <summary>Starport training for the four bridge skills used so far. Crew are all human until
+        /// recruitment arrives, so human skill caps apply; the best specialists will come from other species.</summary>
+        void TrainingGui()
+        {
+            GUILayout.Space(10);
+            GUILayout.Label("Crew training", gm.Header);
+            int points = Mathf.RoundToInt(GameData.T("TrainPointsPerSession", 10f));
+            TrainRow("Science Officer", Roles.Science, () => S.scienceSkill, v => S.scienceSkill = v, points);
+            TrainRow("Navigator", Roles.Navigator, () => S.navigatorSkill, v => S.navigatorSkill = v, points);
+            TrainRow("Pilot", Roles.Pilot, () => S.pilotSkill, v => S.pilotSkill = v, points);
+            TrainRow("Communications Officer", Roles.Comms, () => S.commsSkill, v => S.commsSkill = v, points);
+        }
+
+        void TrainRow(string label, int role, System.Func<int> get, System.Action<int> set, int points)
+        {
+            int cap = GameData.SkillCap("Humans", role);
+            int from = get();
+            int to = Mathf.Min(cap, from + points);
+            if (to <= from)
+            {
+                GUILayout.Label($"{label}: {from} (human maximum).", gm.Label);
+                return;
+            }
+            float tb = GameData.T("TrainBase", 20f), ts = GameData.T("TrainScale", 100f);
+            float cost = tb * ((to - from) + (to * to - from * from) / (2f * ts));
+            int days = Mathf.Max(1, Mathf.CeilToInt((to - from) * GameData.T("TrainDaysPerPoint", 0.5f)));
+            GUILayout.Label($"{label}: {from} / {cap}", gm.Label);
+            if (gm.Button($"Train to {to} ({cost:N0} cr, {days} days)", S.credits >= cost))
+            {
+                S.credits -= cost;
+                S.day += days;
+                set(to);
+                gm.Say($"{label} trained to {to}.");
+            }
+        }
+
+        void ModulesGui()
+        {
+            GUILayout.Space(10);
+            GUILayout.Label("Ship modules", gm.Header);
+            foreach (var u in GameData.Upgrades)
+            {
+                GUILayout.Label($"{u.name}: {u.description}", gm.Label);
+                if (S.Has(u.id)) { GUILayout.Label("Installed.", gm.Hint); continue; }
+                if (gm.Button($"Buy ({u.cost:N0} cr)", S.credits >= u.cost))
+                {
+                    S.credits -= u.cost;
+                    S.upgrades.Add(u.id);
+                    gm.Say($"{u.name} installed.");
+                }
+            }
+        }
+
+        void RoverGui()
+        {
+            var cargoRow = GameData.ShipSystem("Terrain vehicle", "Cargo");
+            var fuelRow = GameData.ShipSystem("Terrain vehicle", "Fuel");
+            if (cargoRow == null) return;
+
+            GUILayout.Space(10);
+            GUILayout.Label("Terrain vehicle", gm.Header);
+            int tier = S.terrainVehicleTier;
+            GUILayout.Label($"Tier {tier}: hold {cargoRow.Value(tier):0}, fuel {(fuelRow != null ? fuelRow.Value(tier) : 0):0} hours.", gm.Label);
+            if (tier >= 5) { GUILayout.Label("Fully upgraded.", gm.Hint); return; }
+
+            int next = tier + 1;
+            float cost = TierCost(cargoRow, next);
+            GUILayout.Label($"Tier {next}: hold {cargoRow.Value(next):0}, fuel {(fuelRow != null ? fuelRow.Value(next) : 0):0} hours.", gm.Hint);
+            if (gm.Button($"Upgrade to tier {next} ({cost:N0} cr)", S.credits >= cost))
+            {
+                S.credits -= cost;
+                S.terrainVehicleTier = next;
+                gm.Say($"Terrain vehicle upgraded to tier {next}.");
+            }
+        }
+
+        static float TierCost(ShipSystemRow row, int tier)
+        {
+            switch (tier)
+            {
+                case 2: return row.t2Cost;
+                case 3: return row.t3Cost;
+                case 4: return row.t4Cost;
+                default: return row.t5Cost;
+            }
+        }
+
+        void ShipyardGui()
+        {
+            GUILayout.Space(10);
+            GUILayout.Label("Shipyard", gm.Header);
+            float tradeIn = S.hull.cost * GameData.T("HullTradeInRate", 0.5f);
+            GUILayout.Label($"Current hull: {S.hull.hullClass}. Trade-in value {tradeIn:N0} cr.", gm.Hint);
+            foreach (var h in GameData.Hulls)
+            {
+                if (h.hullClass == S.hull.hullClass) continue;
+                float price = Mathf.Max(0f, h.cost - tradeIn);
+                float cargoAfter = h.cargoUnits + S.UpgradeBonus("Cargo");
+                GUILayout.Label($"{h.hullClass}: hull {h.hullPoints:0}, cargo {h.cargoUnits:0}, berths {h.crewBerths:0}, tank {h.fuelTank:0}, " +
+                                $"jump fuel x{h.jumpFuelMultiplier:0.00}, speed {h.speed:0}", gm.Label);
+                bool fits = S.CargoUsed <= cargoAfter;
+                if (gm.Button($"Buy ({price:N0} cr after trade-in)", fits && S.credits >= price))
+                {
+                    S.credits -= price;
+                    S.hull = h;
+                    S.fuel = Mathf.Min(S.fuel, S.FuelTank);
+                    gm.Say($"Welcome aboard your new {h.hullClass}.");
+                }
+                if (!fits) GUILayout.Label("Too much cargo aboard to fit this hull. Sell some first.", gm.Hint);
+            }
         }
 
         void Sell(string commodity, int qty, float price)

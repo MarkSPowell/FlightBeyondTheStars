@@ -73,6 +73,7 @@ def main(path, out):
     write("Hulls", table(wb["Hulls"]))
     write("ShipSystems", table(wb["ShipSystems"]))
     write("Weapons", table(wb["Weapons"]))
+    write("Upgrades", table(wb["Upgrades"]))
     write("CrewRoles", table(wb["Crew"]))
 
     # Species: caps as a nested list in role order

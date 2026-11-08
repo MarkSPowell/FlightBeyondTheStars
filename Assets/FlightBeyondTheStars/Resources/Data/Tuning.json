@@ -63,6 +63,50 @@
     {
       "key": "StartCredits",
       "value": 10000.0
+    },
+    {
+      "key": "HullTradeInRate",
+      "value": 0.5
+    },
+    {
+      "key": "RoverRevealRadius",
+      "value": 4.0
+    },
+    {
+      "key": "RoverRefuelShipFuel",
+      "value": 1.0
+    },
+    {
+      "key": "EmergencyPickupCost",
+      "value": 500.0
+    },
+    {
+      "key": "ScanEstimateSkill",
+      "value": 40.0
+    },
+    {
+      "key": "ScanDetailSkill",
+      "value": 120.0
+    },
+    {
+      "key": "ScanRuinsSkill",
+      "value": 100.0
+    },
+    {
+      "key": "ScanPreciseSkill",
+      "value": 250.0
+    },
+    {
+      "key": "RuinAreaMaxRadius",
+      "value": 30.0
+    },
+    {
+      "key": "RuinAreaMinRadius",
+      "value": 1.5
+    },
+    {
+      "key": "TrainPointsPerSession",
+      "value": 10.0
     }
   ]
 }

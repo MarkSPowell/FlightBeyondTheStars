@@ -4,32 +4,34 @@ using UnityEngine;
 namespace FBTS
 {
     /// <summary>
-    /// Planet surface: a whole wrap-around world streamed in sections. Drive the terrain vehicle, collect deposits,
-    /// unload and refuel at the lander, call the lander to you, and launch when done.
+    /// Planet surface: a wrap-around world streamed in sections from the shared PlanetTerrain.
+    /// Drive the rover, collect minerals and life forms, search ruins, unload and refuel at the lander, then launch.
     /// </summary>
     public class SurfaceView : View
     {
-        class Deposit
+        class Site
         {
-            public long key;
-            public Vector2 pos;
-            public string commodity;
+            public SiteSpec spec;
+            public Vector2 pos;   // unwrapped world position
             public int amount;
             public SpriteRenderer sprite;
         }
 
         class Section
         {
-            public int cx, cy;           // unwrapped column, row
+            public int cx, cy;    // unwrapped column, row
             public GameObject go;
             public Texture2D tex;
-            public readonly List<Deposit> deposits = new List<Deposit>();
+            public readonly List<Site> sites = new List<Site>();
         }
 
-        const int SW = 48, SH = 30;              // tiles per section
-        const float SecondsPerHour = 8f;         // rover fuel is in hours; 1 hour = 8 s of driving
-        const float PickupCost = 500f;
-        const float RoverRefuelShipFuel = 1f;    // ship fuel to refill the rover from empty
+        const int SW = PlanetTerrain.SW, SH = PlanetTerrain.SH;
+        const float SecondsPerHour = 8f;
+
+        static float PickupCost => GameData.T("EmergencyPickupCost", 500f);
+        static float RoverRefuelShipFuel => GameData.T("RoverRefuelShipFuel", 1f);
+
+        static readonly string[] RuinGoods = { "Consumer goods", "Machinery", "Electronics", "Medical supplies", "Alloy plate" };
 
         readonly Planet planet;
         readonly Vector2 returnSpawn;
@@ -37,26 +39,26 @@ namespace FBTS
         readonly Dictionary<string, int> roverCargo = new Dictionary<string, int>();
         readonly Queue<Vector2Int> buildQueue = new Queue<Vector2Int>();
 
+        PlanetTerrain terrain;
         Transform rover, lander;
         SpriteRenderer compass;
-        Vector2 landing;                          // unwrapped world position of the lander
+        Vector2 landing;
         float roverFuel, roverFuelMax;
         int roverCapacity;
-        Deposit nearDeposit;
+        Site nearSite;
         bool nearLander;
         long lastSectionKey = long.MinValue;
         bool firstSection = true;
-        float ox, oy;
 
-        public SurfaceView(Planet p, Vector2 spawnBack)
+        public SurfaceView(Planet p, Vector2 spawnBack, Vector2 landingSite)
         {
             planet = p;
             returnSpawn = spawnBack;
+            landing = landingSite;
         }
 
-        int Around => planet.SectionsAround;
-        float Circumference => Around * SW;
-        float WorldHeight => Planet.SectionsTall * SH;
+        float Circumference => terrain.circumference;
+        float WorldHeight => terrain.worldHeight;
 
         int RoverLoad
         {
@@ -67,20 +69,19 @@ namespace FBTS
 
         public override void Enter()
         {
+            terrain = new PlanetTerrain(planet);
             Cam.orthographicSize = 8f;
-            ox = (planet.seed % 1000) * 0.37f;
-            oy = (planet.seed / 1000 % 1000) * 0.53f;
-
-            landing = new Vector2(SW * 0.5f, WorldHeight * 0.5f);
 
             lander = Draw.Ship("Lander", root, new Color(0.4f, 0.9f, 1f), 1.2f);
             lander.localPosition = landing;
             lander.localRotation = Quaternion.Euler(0, 0, 90);
 
             rover = Draw.Ship("Rover", root, new Color(1f, 0.9f, 0.3f), 0.6f);
-            rover.localPosition = landing + new Vector2(0f, -1.5f);
+            Vector2 start = landing + new Vector2(0f, -1.5f);
+            if (!terrain.Passable(start.x, start.y)) start = landing;
+            rover.localPosition = start;
 
-            compass = Draw.Dot("Compass", root, rover.localPosition, 0.3f, new Color(0.4f, 0.9f, 1f, 0.9f), 25);
+            compass = Draw.Dot("Compass", root, start, 0.3f, new Color(0.4f, 0.9f, 1f, 0.9f), 25);
 
             var fuelRow = GameData.ShipSystem("Terrain vehicle", "Fuel");
             var cargoRow = GameData.ShipSystem("Terrain vehicle", "Cargo");
@@ -88,14 +89,13 @@ namespace FBTS
             roverCapacity = cargoRow != null ? Mathf.RoundToInt(cargoRow.Value(S.terrainVehicleTier)) : 10;
             roverFuel = roverFuelMax;
 
-            // Build the starting area immediately; everything else streams in as the rover moves.
-            var start = SectionAt(rover.localPosition);
+            var here = SectionAt(start);
             for (int dy = -1; dy <= 1; dy++)
                 for (int dx = -1; dx <= 1; dx++)
-                    BuildSection(start.x + dx, start.y + dy);
+                    BuildSection(here.x + dx, here.y + dy);
 
-            gm.Follow(rover.localPosition, 0f);
-            gm.Say($"Landed on {planet.name}. Explore, collect deposits, and return to the lander to unload or refuel.");
+            gm.Follow(start, 0f);
+            gm.Say($"Landed on {planet.name}. Minerals favour mountains; life and ruins favour coasts.");
         }
 
         public override void Exit()
@@ -107,117 +107,69 @@ namespace FBTS
 
         // ---------------------------------------------------------------- World coordinates
 
-        int WrapCol(int cx) => ((cx % Around) + Around) % Around;
+        int WrapCol(int cx) => terrain.WrapCol(cx);
         float WrapDx(float dx) => dx - Mathf.Round(dx / Circumference) * Circumference;
-        static long Key(int col, int row) => ((long)col << 16) | (uint)row;
-
+        static long Key(int col, int row) => PlanetTerrain.SectionKey(col, row);
         Vector2Int SectionAt(Vector2 p) => new Vector2Int(Mathf.FloorToInt(p.x / SW), Mathf.Clamp(Mathf.FloorToInt(p.y / SH), 0, Planet.SectionsTall - 1));
-
-        /// <summary>Latitude in degrees (-72..72) and longitude (-180..180) for the panel readout.</summary>
-        Vector2 LatLong(Vector2 p)
-        {
-            float lat = (p.y / WorldHeight - 0.5f) * 144f;
-            float x = ((p.x % Circumference) + Circumference) % Circumference;
-            float lon = x / Circumference * 360f - 180f;
-            return new Vector2(lat, lon);
-        }
-
-        /// <summary>Seamless terrain value: samples noise on a cylinder so the planet wraps east-west.</summary>
-        float TerrainValue(float x, float y)
-        {
-            float u = x / Circumference * Mathf.PI * 2f;
-            float r = 0.12f * Circumference / (Mathf.PI * 2f);
-            float a = Mathf.PerlinNoise(ox + Mathf.Cos(u) * r, oy + y * 0.12f);
-            float b = Mathf.PerlinNoise(ox + 50f + Mathf.Sin(u) * r, oy + 50f + y * 0.12f);
-            float fine = (a + b) * 0.5f;
-            float c = Mathf.PerlinNoise(ox + 200f + Mathf.Cos(u) * r * 0.15f, oy + y * 0.02f);
-            float d = Mathf.PerlinNoise(ox + 300f + Mathf.Sin(u) * r * 0.15f, oy + 300f + y * 0.02f);
-            float broad = (c + d) * 0.5f;
-            float n = fine * 0.65f + broad * 0.35f;
-            return Mathf.Clamp01((n - 0.5f) * 2.2f + 0.5f);
-        }
-
-        Color TerrainColor(float n, float lat)
-        {
-            Color c;
-            switch (planet.type)
-            {
-                case PlanetType.Molten:
-                    c = n > 0.62f ? Color.Lerp(new Color(0.9f, 0.3f, 0.05f), new Color(1f, 0.7f, 0.2f), (n - 0.62f) * 2.5f)
-                                  : Color.Lerp(new Color(0.15f, 0.08f, 0.07f), new Color(0.32f, 0.16f, 0.12f), n);
-                    return c; // no ice caps on molten worlds
-                case PlanetType.Ice:
-                    c = Color.Lerp(new Color(0.55f, 0.68f, 0.82f), new Color(0.9f, 0.95f, 1f), n);
-                    break;
-                case PlanetType.Ocean:
-                    c = n > 0.55f ? Color.Lerp(new Color(0.22f, 0.45f, 0.22f), new Color(0.4f, 0.6f, 0.3f), n)
-                                  : Color.Lerp(new Color(0.05f, 0.18f, 0.45f), new Color(0.12f, 0.35f, 0.65f), n);
-                    break;
-                default:
-                    c = Color.Lerp(new Color(0.35f, 0.29f, 0.24f), new Color(0.65f, 0.56f, 0.44f), n);
-                    break;
-            }
-            float polar = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(48f, 70f, Mathf.Abs(lat)));
-            return Color.Lerp(c, new Color(0.92f, 0.95f, 1f), polar * 0.85f);
-        }
 
         // ---------------------------------------------------------------- Streaming
 
         void BuildSection(int cx, int cy)
         {
             if (cy < 0 || cy >= Planet.SectionsTall) return;
-            long k = Key(cx, cy); // unwrapped key: a section on the far side of the wrap is a separate copy
+            long k = Key(cx, cy);
             if (sections.ContainsKey(k)) return;
 
             var sec = new Section { cx = cx, cy = cy };
-            sec.go = new GameObject($"Section {WrapCol(cx)},{cy}");
+            int col = WrapCol(cx);
+            sec.go = new GameObject($"Section {col},{cy}");
             sec.go.transform.SetParent(root, false);
 
             var tex = new Texture2D(SW, SH, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
             var px = new Color[SW * SH];
             for (int y = 0; y < SH; y++)
                 for (int x = 0; x < SW; x++)
-                {
-                    float wx = cx * SW + x + 0.5f, wy = cy * SH + y + 0.5f;
-                    px[y * SW + x] = TerrainColor(TerrainValue(wx, wy), LatLong(new Vector2(wx, wy)).x);
-                }
+                    px[y * SW + x] = terrain.SurfaceColor(cx * SW + x + 0.5f, cy * SH + y + 0.5f);
             tex.SetPixels(px);
             tex.Apply();
             sec.tex = tex;
             var sprite = Sprite.Create(tex, new Rect(0, 0, SW, SH), Vector2.zero, 1f);
             Draw.MakeSprite("Terrain", sec.go.transform, sprite, new Vector2(cx * SW, cy * SH), Vector2.one, Color.white, 0);
 
-            // Deposits are seeded by the wrapped section, so the same spot always holds the same thing.
-            int col = WrapCol(cx);
-            var rng = new System.Random(planet.seed ^ (col * 73856093) ^ (cy * 19349663));
-            int count = 5 + rng.Next(5);
-            for (int i = 0; i < count; i++)
+            float shift = (cx - col) * SW; // sites are generated at the wrapped column; move them to this copy
+            foreach (var spec in terrain.SectionSites(col, cy))
             {
-                var pos = new Vector2(cx * SW + 1 + (float)rng.NextDouble() * (SW - 2), cy * SH + 1 + (float)rng.NextDouble() * (SH - 2));
-                double roll = rng.NextDouble();
-                string commodity = planet.minerals.Count == 0 ? "Iron ore"
-                    : roll < 0.5 ? planet.minerals[0]
-                    : roll < 0.85 ? planet.minerals[Mathf.Min(1, planet.minerals.Count - 1)]
-                    : planet.minerals[planet.minerals.Count - 1];
-                int amount = 1 + rng.Next(4);
-                long dkey = (Key(col, cy) << 8) | (uint)i;
-                if (planet.minedDeposits.Contains(dkey)) continue;
-
-                var c = GameData.Commodity(commodity);
-                float value = c != null ? c.basePrice : 10f;
-                Color colr = value < 20 ? new Color(0.75f, 0.75f, 0.75f) : value < 60 ? new Color(1f, 0.65f, 0.2f) : new Color(0.3f, 1f, 0.95f);
-                var d = new Deposit { key = dkey, pos = pos, commodity = commodity, amount = amount };
-                d.sprite = Draw.Dot("Deposit", sec.go.transform, pos, 0.6f, colr, 10);
-                sec.deposits.Add(d);
+                bool done = planet.minedDeposits.Contains(spec.key);
+                if (done && spec.kind != SiteKind.Ruin) continue;
+                var site = new Site { spec = spec, pos = spec.pos + new Vector2(shift, 0f), amount = spec.amount };
+                site.sprite = MakeSiteSprite(site, sec.go.transform, done);
+                sec.sites.Add(site);
             }
             sections[k] = sec;
+        }
+
+        SpriteRenderer MakeSiteSprite(Site s, Transform parent, bool searched)
+        {
+            switch (s.spec.kind)
+            {
+                case SiteKind.Ruin:
+                    var r = Draw.MakeSprite("Ruin", parent, Draw.Square, s.pos, new Vector2(0.9f, 0.9f),
+                        searched ? new Color(0.35f, 0.33f, 0.3f) : new Color(0.75f, 0.68f, 0.5f), 10);
+                    r.transform.localRotation = Quaternion.Euler(0, 0, 45);
+                    return r;
+                case SiteKind.Life:
+                    return Draw.Dot("Life", parent, s.pos, 0.55f, new Color(0.45f, 1f, 0.45f), 10);
+                default:
+                    var c = GameData.Commodity(s.spec.commodity);
+                    float value = c != null ? c.basePrice : 10f;
+                    Color col = value < 20 ? new Color(0.75f, 0.75f, 0.75f) : value < 60 ? new Color(1f, 0.65f, 0.2f) : new Color(0.3f, 1f, 0.95f);
+                    return Draw.Dot("Mineral", parent, s.pos, 0.6f, col, 10);
+            }
         }
 
         void Stream(Vector2 roverPos)
         {
             var here = SectionAt(roverPos);
-
-            // Announce sections the crew hasn't seen before.
             long wrappedKey = Key(WrapCol(here.x), here.y);
             if (wrappedKey != lastSectionKey)
             {
@@ -227,7 +179,6 @@ namespace FBTS
                 firstSection = false;
             }
 
-            // Queue the 3x3 neighbourhood; build at most one section per frame to avoid hitches.
             for (int dy = -1; dy <= 1; dy++)
                 for (int dx = -1; dx <= 1; dx++)
                 {
@@ -242,14 +193,10 @@ namespace FBTS
                 BuildSection(next.x, next.y);
             }
 
-            // Unload sections more than two away.
             List<long> drop = null;
             foreach (var kv in sections)
-            {
-                var s = kv.Value;
-                if (Mathf.Abs(s.cx - here.x) > 2 || Mathf.Abs(s.cy - here.y) > 2)
+                if (Mathf.Abs(kv.Value.cx - here.x) > 2 || Mathf.Abs(kv.Value.cy - here.y) > 2)
                     (drop ??= new List<long>()).Add(kv.Key);
-            }
             if (drop != null)
                 foreach (var k in drop)
                 {
@@ -270,80 +217,156 @@ namespace FBTS
             if (roverFuel > 0f && move.sqrMagnitude > 0f)
             {
                 float speed = 4f / Mathf.Lerp(0.8f, 1.6f, Mathf.Clamp01(planet.gravity / 2f));
-                pos += move * speed * dt;
-                pos.y = Mathf.Clamp(pos.y, 0.5f, WorldHeight - 0.5f); // poles are impassable; east-west wraps
-                rover.localPosition = pos;
-                rover.localRotation = Quaternion.Euler(0, 0, Mathf.Atan2(move.y, move.x) * Mathf.Rad2Deg);
-                roverFuel = Mathf.Max(0f, roverFuel - move.magnitude * dt / SecondsPerHour);
+                Vector2 step = move * speed * dt;
+                // Seas (and lava) block the rover; slide along the shore when moving diagonally.
+                Vector2 next = pos + step;
+                if (!terrain.Passable(next.x, next.y))
+                {
+                    if (terrain.Passable(pos.x + step.x, pos.y)) next = new Vector2(pos.x + step.x, pos.y);
+                    else if (terrain.Passable(pos.x, pos.y + step.y)) next = new Vector2(pos.x, pos.y + step.y);
+                    else next = pos;
+                }
+                next.y = Mathf.Clamp(next.y, 0.5f, WorldHeight - 0.5f);
+                if (next != pos)
+                {
+                    rover.localPosition = next;
+                    rover.localRotation = Quaternion.Euler(0, 0, Mathf.Atan2(move.y, move.x) * Mathf.Rad2Deg);
+                    roverFuel = Mathf.Max(0f, roverFuel - move.magnitude * dt / SecondsPerHour);
+                    pos = next;
+                }
             }
             gm.Follow(pos, 6f);
             Stream(pos);
 
-            // The lander is drawn at whichever wrapped copy is nearest the rover.
             Vector2 shown = LanderShown(pos);
             lander.localPosition = shown;
             Vector2 toLander = shown - pos;
             compass.enabled = toLander.magnitude > 6f;
             compass.transform.localPosition = pos + toLander.normalized * 1.3f;
 
-            nearDeposit = null;
-            float best = 0.9f;
+            nearSite = null;
+            float best = 1.0f;
+            float reveal = S.RoverRevealRadius;
             foreach (var s in sections.Values)
-                foreach (var d in s.deposits)
+                foreach (var site in s.sites)
                 {
-                    float dist = Vector2.Distance(pos, d.pos);
-                    if (d.sprite != null) d.sprite.enabled = planet.scanned || dist < 4f;
-                    if (dist < best) { best = dist; nearDeposit = d; }
+                    float dist = Vector2.Distance(pos, site.pos);
+                    if (site.sprite != null && site.spec.kind != SiteKind.Ruin)
+                        site.sprite.enabled = planet.scanned || dist < reveal;
+                    bool usable = site.spec.kind != SiteKind.Ruin || !planet.minedDeposits.Contains(site.spec.key);
+                    if (usable && dist < best) { best = dist; nearSite = site; }
                 }
             nearLander = toLander.magnitude < 1.6f;
 
             if (Controls.Action())
             {
-                if (nearDeposit != null) Collect(nearDeposit);
+                if (nearSite != null) Use(nearSite);
                 else if (nearLander && RoverLoad > 0) Unload();
                 else if (nearLander && roverFuel < roverFuelMax) RefuelRover();
             }
             if (nearLander && Controls.Secondary()) Launch();
         }
 
-        // ---------------------------------------------------------------- Actions
+        // ---------------------------------------------------------------- Sites
 
-        void Collect(Deposit d)
+        void Use(Site s)
         {
-            int space = roverCapacity - RoverLoad;
-            if (space <= 0) { gm.Say("Rover hold is full. Unload at the lander."); return; }
-            int take = Mathf.Min(space, d.amount);
-            roverCargo.TryGetValue(d.commodity, out int have);
-            roverCargo[d.commodity] = have + take;
-            d.amount -= take;
-            gm.Say($"Collected {take} {d.commodity}.");
-            if (d.amount <= 0)
+            if (s.spec.kind == SiteKind.Ruin) SearchRuin(s);
+            else Collect(s);
+        }
+
+        int AddToRover(string commodity, int amount)
+        {
+            int take = Mathf.Min(roverCapacity - RoverLoad, amount);
+            if (take <= 0) return 0;
+            roverCargo.TryGetValue(commodity, out int have);
+            roverCargo[commodity] = have + take;
+            return take;
+        }
+
+        void RemoveSite(Site s)
+        {
+            planet.minedDeposits.Add(s.spec.key);
+            if (s.sprite != null) Object.Destroy(s.sprite.gameObject);
+            foreach (var sec in sections.Values) sec.sites.Remove(s);
+        }
+
+        void Collect(Site s)
+        {
+            if (RoverLoad >= roverCapacity) { gm.Say("Rover hold is full. Unload at the lander."); return; }
+            int take = AddToRover(s.spec.commodity, s.amount);
+            s.amount -= take;
+            gm.Say(s.spec.kind == SiteKind.Life ? $"Collected {take} {s.spec.commodity} (stored in stasis)." : $"Collected {take} {s.spec.commodity}.");
+            if (s.amount <= 0) RemoveSite(s);
+        }
+
+        /// <summary>Ruins hold trade goods, sometimes fuel, rarely artifacts, and in a race's territory, lore.</summary>
+        void SearchRuin(Site s)
+        {
+            if (planet.minedDeposits.Contains(s.spec.key)) { gm.Say("These ruins have already been searched."); return; }
+            if (RoverLoad >= roverCapacity) { gm.Say("Rover hold is full. Unload at the lander before searching."); return; }
+
+            var rng = new System.Random((int)(s.spec.key ^ (s.spec.key >> 32)) ^ planet.seed);
+            double roll = rng.NextDouble();
+            string found; int amount;
+            if (roll < 0.02) { found = "Major artifact"; amount = 1; }
+            else if (roll < 0.10) { found = "Minor artifact"; amount = 1; }
+            else if (roll < 0.30) { found = "Drive crystal fuel"; amount = 2 + rng.Next(3); }
+            else { found = RuinGoods[rng.Next(RuinGoods.Length)]; amount = 2 + rng.Next(4); }
+
+            int took = AddToRover(found, amount);
+            planet.minedDeposits.Add(s.spec.key);
+            if (s.sprite != null) s.sprite.color = new Color(0.35f, 0.33f, 0.3f);
+
+            string msg = $"Searched the ruins: found {amount} {found}" + (took < amount ? $" (room for {took})." : ".");
+            if (found.Contains("artifact")) msg += " A rare find!";
+            gm.Say(msg);
+
+            // Lore, if this planet is in a race's territory and that race has records left to find.
+            string race = S.current.territory;
+            if (race != null && rng.NextDouble() < 0.7)
             {
-                planet.minedDeposits.Add(d.key);
-                Object.Destroy(d.sprite.gameObject);
-                foreach (var s in sections.Values) s.deposits.Remove(d);
+                foreach (var l in GameData.Lore)
+                {
+                    if (l.race != race || S.loreFound.Contains(l.id)) continue;
+                    S.loreFound.Add(l.id);
+                    gm.ShowNote($"{l.title}  ({l.race} record)", l.text + "\n\nAdded to the captain's log.");
+                    break;
+                }
             }
         }
 
+        // ---------------------------------------------------------------- Lander actions
+
         void Unload()
         {
-            int stored = 0;
+            int stored = 0, fuelUnits = 0;
             var full = new List<string>();
             foreach (var kv in new List<KeyValuePair<string, int>>(roverCargo))
             {
-                int added = S.AddCargo(kv.Key, kv.Value);
+                int remaining = kv.Value;
+                if (kv.Key == "Drive crystal fuel")
+                {
+                    // Recovered fuel tops up the ship's tank first; any surplus goes into the hold as cargo.
+                    int toTank = Mathf.Min(remaining, Mathf.FloorToInt(S.FuelTank - S.fuel));
+                    S.fuel += toTank;
+                    fuelUnits += toTank;
+                    remaining -= toTank;
+                }
+                int added = remaining > 0 ? S.AddCargo(kv.Key, remaining) : 0;
                 stored += added;
-                if (added >= kv.Value) roverCargo.Remove(kv.Key);
-                else { roverCargo[kv.Key] = kv.Value - added; full.Add(kv.Key); }
+                remaining -= added;
+                if (remaining <= 0) roverCargo.Remove(kv.Key);
+                else { roverCargo[kv.Key] = remaining; full.Add(kv.Key); }
             }
-            gm.Say(full.Count == 0
-                ? $"Unloaded {stored} units into the ship's hold."
-                : $"Unloaded {stored} units. Ship hold is full; {string.Join(", ", full)} stays in the rover.");
+            string msg = $"Unloaded {stored} units into the hold" + (fuelUnits > 0 ? $" and {fuelUnits} fuel into the tank." : ".");
+            if (full.Count > 0) msg += $" Hold is full; {string.Join(", ", full)} stays in the rover.";
+            gm.Say(msg);
         }
 
         void RefuelRover()
         {
-            float missing = (roverFuelMax - roverFuel) / roverFuelMax; // 0..1 of a tank
+            float missing = (roverFuelMax - roverFuel) / roverFuelMax;
             float shipFuel = missing * RoverRefuelShipFuel;
             if (S.fuel < shipFuel) { gm.Say("Not enough ship fuel to refuel the rover."); return; }
             S.fuel -= shipFuel;
@@ -353,14 +376,14 @@ namespace FBTS
 
         float RelocateCost => Mathf.Ceil(planet.gravity);
 
-        /// <summary>Fly the lander to the rover, for big planets or an empty rover tank.</summary>
         void CallLander(bool emergency)
         {
-            if (!emergency && !S.landerAutopilot) { gm.Say("Calling the lander needs the Lander Autopilot upgrade."); return; }
+            if (!emergency && !S.LanderAutopilot) { gm.Say("Calling the lander needs the Lander Autopilot upgrade."); return; }
             if (!emergency && S.fuel < RelocateCost) { gm.Say($"Moving the lander needs {RelocateCost:0} ship fuel."); return; }
             Vector2 roverPos = rover.localPosition;
             Vector2 from = LanderShown(roverPos);
             Vector2 to = roverPos + new Vector2(2f, 0f);
+            if (!terrain.Passable(to.x, to.y)) to = roverPos;
             SpriteRenderer flame = null;
 
             gm.Play(new Cutscene
@@ -374,7 +397,7 @@ namespace FBTS
                     float hop = Mathf.Sin(t * Mathf.PI);
                     Vector2 p = Vector2.Lerp(from, to, a);
                     lander.localPosition = p;
-                    lander.localScale = Vector3.one * (1f - 0.4f * hop); // smaller = higher above the ground
+                    lander.localScale = Vector3.one * (1f - 0.4f * hop);
                     flame.transform.localPosition = p + new Vector2(0f, -0.9f * lander.localScale.x);
                     flame.transform.localScale = Vector3.one * (0.4f + 0.2f * Mathf.Sin(t * 60f));
                     gm.Follow(Vector2.Lerp(roverPos, p, 0.5f), 0f);
@@ -428,7 +451,7 @@ namespace FBTS
 
         void CompleteLaunch()
         {
-            if (RoverLoad > 0) Unload(); // anything still in the rover goes aboard on the way up
+            if (RoverLoad > 0) Unload();
             gm.FadeColor = Color.black;
             gm.FadeAlpha = 1f;
             gm.Go(new SystemView(returnSpawn));
@@ -440,20 +463,20 @@ namespace FBTS
         public override void WorldGui()
         {
             gm.WorldLabel(lander.localPosition, "Lander", 22);
+            if (nearSite != null && nearSite.spec.kind == SiteKind.Ruin) gm.WorldLabel(nearSite.pos, "Ruins", 16);
         }
 
         public override void Gui()
         {
             Vector2 pos = rover.localPosition;
-            Vector2 ll = LatLong(pos);
+            float lat = terrain.Latitude(pos.y), lon = terrain.Longitude(pos.x);
             Vector2 toLander = LanderShown(pos) - pos;
 
             GUILayout.Label(planet.name, gm.Header);
             GUILayout.Label($"{planet.type}, {planet.gravity:0.0} g. Hazard: {planet.hazard}", gm.Label);
-            GUILayout.Label($"Position: {Mathf.Abs(ll.x):0}°{(ll.x >= 0 ? "N" : "S")}  {Mathf.Abs(ll.y):0}°{(ll.y >= 0 ? "E" : "W")}   " +
-                            $"Sections explored: {planet.visitedSections.Count}/{Around * Planet.SectionsTall}", gm.Hint);
-            if (!planet.scanned) GUILayout.Label("Not scanned from orbit: deposits only show when the rover is close.", gm.Hint);
-            GUILayout.Label("Drive: WASD / stick.  Collect, unload, refuel: E / A.  Launch at lander: L / Y.", gm.Hint);
+            GUILayout.Label($"{Mathf.Abs(lat):0}°{(lat >= 0 ? "N" : "S")} {Mathf.Abs(lon):0}°{(lon >= 0 ? "E" : "W")}, " +
+                            $"{terrain.Describe(terrain.ClassAt(pos.x, pos.y))}.  Sections explored: {planet.visitedSections.Count}/{terrain.around * Planet.SectionsTall}", gm.Hint);
+            GUILayout.Label("Drive: WASD / stick.  Collect, search, unload, refuel: E / A.  Launch at lander: L / Y.", gm.Hint);
             GUILayout.Space(6);
 
             GUILayout.Label($"Rover fuel: {roverFuel:0.0} / {roverFuelMax:0} hours", gm.Label);
@@ -463,10 +486,23 @@ namespace FBTS
             GUILayout.Label(nearLander ? "At the lander." : $"Lander: {toLander.magnitude:0} km {Heading(toLander)}", gm.Label);
             GUILayout.Space(6);
 
-            if (nearDeposit != null)
+            if (nearSite != null)
             {
-                GUILayout.Label($"Deposit: {nearDeposit.commodity} ({nearDeposit.amount})", gm.Label);
-                if (gm.Button("Collect (E)")) Collect(nearDeposit);
+                switch (nearSite.spec.kind)
+                {
+                    case SiteKind.Ruin:
+                        GUILayout.Label("Ancient ruins.", gm.Label);
+                        if (gm.Button("Search ruins (E)")) SearchRuin(nearSite);
+                        break;
+                    case SiteKind.Life:
+                        GUILayout.Label($"Life form: {nearSite.spec.commodity} ({nearSite.amount})", gm.Label);
+                        if (gm.Button("Collect specimen (E)")) Collect(nearSite);
+                        break;
+                    default:
+                        GUILayout.Label($"Deposit: {nearSite.spec.commodity} ({nearSite.amount})", gm.Label);
+                        if (gm.Button("Collect (E)")) Collect(nearSite);
+                        break;
+                }
             }
 
             if (nearLander)
@@ -476,7 +512,7 @@ namespace FBTS
                 if (gm.Button($"Refuel rover ({need:0.00} ship fuel)", roverFuel < roverFuelMax && S.fuel >= need)) RefuelRover();
                 if (gm.Button("Launch to orbit (L)")) Launch();
             }
-            else if (S.landerAutopilot)
+            else if (S.LanderAutopilot)
             {
                 if (gm.Button($"Call lander here ({RelocateCost:0} ship fuel)", S.fuel >= RelocateCost)) CallLander(false);
             }

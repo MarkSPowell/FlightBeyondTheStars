@@ -129,7 +129,7 @@ namespace FBTS
         {
             GUILayout.Label("Galaxy map", gm.Header);
             GUILayout.Label("Click a star to select it. Pan: WASD. Zoom: mouse wheel. Back: M.", gm.Hint);
-            GUILayout.Label($"Current system: {S.current.name}", gm.Label);
+            GUILayout.Label($"Current system: {S.current.name} ({S.current.territory ?? "unclaimed"})", gm.Label);
             GUILayout.Space(8);
 
             if (selected != null && selected != S.current)
@@ -143,7 +143,8 @@ namespace FBTS
                 GUILayout.Label($"Distance: {dist:0.0} ly\n" +
                                 (route ? "Jump route: open" : "No jump route: free flight (slow, fuel-hungry)") +
                                 $"\nFuel needed: {fuel:0.0} (you have {S.fuel:0.0})\nTravel time: {days} days" +
-                                (selected.starportRace != null ? $"\nStarport: {selected.starportRace}" : ""), gm.Label);
+                                (selected.starportRace != null ? $"\nStarport: {selected.starportRace}" : "") +
+                                $"\nTerritory: {(selected.territory ?? "unclaimed")}", gm.Label);
                 GUILayout.Label($"Navigator skill {S.navigatorSkill} saves {-GameData.RoleBonus("Navigator", S.navigatorSkill):P0} fuel.", gm.Hint);
 
                 if (gm.Button(route ? "Jump" : "Free flight", S.fuel >= fuel))

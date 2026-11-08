@@ -17,6 +17,7 @@ namespace FBTS
         public int seed;
         public bool scanned;
         public bool surveySold;
+        public string inhabitedBy;   // race with cities on this world, if any
         public List<string> minerals = new List<string>();
         public HashSet<long> minedDeposits = new HashSet<long>();
         public HashSet<long> visitedSections = new HashSet<long>();
@@ -37,6 +38,7 @@ namespace FBTS
         public Color color;
         public bool visited;
         public string starportRace; // null = no starport
+        public string territory;    // race whose space this is; null = unclaimed
         public List<Planet> planets = new List<Planet>();
         public List<int> links = new List<int>();
     }
@@ -94,9 +96,54 @@ namespace FBTS
             g.systems[0].visited = true;
             if (g.systems.Count > 1) g.systems[1].starportRace = "Orrun Combine";
 
+            var homes = AssignTerritories(g);
             BuildRoutes(g);
             foreach (var s in g.systems) BuildPlanets(s, rng);
+
+            // Each race's home system has one inhabited world (preferring ocean or rocky planets).
+            foreach (var h in homes)
+            {
+                Planet best = null;
+                foreach (var p in h.Key.planets)
+                    if (p.type == PlanetType.Ocean || p.type == PlanetType.Rocky) { best = p; break; }
+                if (best == null) foreach (var p in h.Key.planets) if (p.Landable) { best = p; break; }
+                if (best != null) best.inhabitedBy = h.Value;
+            }
             return g;
+        }
+
+        static readonly string[] OtherRaces = { "Noeti", "Varkesh", "The Murmur", "Ophane", "Thuum" };
+
+        /// <summary>Humans hold Haven, the Orrun hold Brightmarket; other races get homes spread far apart.
+        /// Every system within 13 ly of a home belongs to the nearest one; the rest is unclaimed frontier.</summary>
+        static List<KeyValuePair<StarSystem, string>> AssignTerritories(Galaxy g)
+        {
+            var homes = new List<KeyValuePair<StarSystem, string>> { new KeyValuePair<StarSystem, string>(g.systems[0], "Humans") };
+            if (g.systems.Count > 1) homes.Add(new KeyValuePair<StarSystem, string>(g.systems[1], "Orrun Combine"));
+            foreach (var race in OtherRaces)
+            {
+                StarSystem best = null; float bestD = -1f;
+                foreach (var s in g.systems)
+                {
+                    bool taken = false;
+                    float nearest = float.MaxValue;
+                    foreach (var h in homes) { if (h.Key == s) taken = true; nearest = Mathf.Min(nearest, Vector2.Distance(h.Key.pos, s.pos)); }
+                    if (!taken && nearest > bestD) { bestD = nearest; best = s; }
+                }
+                if (best == null || bestD < 6f) break;
+                homes.Add(new KeyValuePair<StarSystem, string>(best, race));
+            }
+            foreach (var s in g.systems)
+            {
+                string owner = null; float d = 13f;
+                foreach (var h in homes)
+                {
+                    float dist = Vector2.Distance(h.Key.pos, s.pos);
+                    if (dist < d) { d = dist; owner = h.Value; }
+                }
+                s.territory = owner;
+            }
+            return homes;
         }
 
         static void BuildRoutes(Galaxy g)
@@ -168,7 +215,7 @@ namespace FBTS
                 case PlanetType.Rocky: return new[] { "Iron ore", "Copper", "Titanium" };
                 case PlanetType.Molten: return new[] { "Iron ore", "Cobalt", "Platinum" };
                 case PlanetType.Ice: return new[] { "Drive crystal ore", "Copper", "Rhodium" };
-                case PlanetType.Ocean: return new[] { "Medicinal flora", "Copper", "Common specimen" };
+                case PlanetType.Ocean: return new[] { "Copper", "Iron ore", "Titanium" };
                 default: return new string[0];
             }
         }

@@ -1,0 +1,36 @@
+{
+  "items": [
+    {
+      "id": "LanderAutopilot",
+      "name": "Lander Autopilot",
+      "cost": 15000,
+      "effect": "Unlock",
+      "amount": 1,
+      "description": "Call the lander to the rover anywhere on a planet (costs ship fuel each use)."
+    },
+    {
+      "id": "ExtendedTank",
+      "name": "Extended Fuel Tank",
+      "cost": 8000,
+      "effect": "FuelTank",
+      "amount": 20,
+      "description": "Adds fuel tank capacity."
+    },
+    {
+      "id": "CargoPods",
+      "name": "Cargo Pods",
+      "cost": 6000,
+      "effect": "Cargo",
+      "amount": 25,
+      "description": "Adds cargo capacity."
+    },
+    {
+      "id": "DeepScanner",
+      "name": "Deep Surface Scanner",
+      "cost": 5000,
+      "effect": "RevealRadius",
+      "amount": 4,
+      "description": "Adds to the rover's deposit-reveal distance on unscanned planets."
+    }
+  ]
+}

@@ -51,6 +51,35 @@ namespace FBTS
         }
     }
 
+    [Serializable]
+    public class UpgradeRow
+    {
+        public string id;
+        public string name;
+        public float cost;
+        public string effect;   // Unlock, FuelTank, Cargo, RevealRadius
+        public float amount;
+        public string description;
+    }
+
+    [Serializable]
+    public class SpeciesRow
+    {
+        public string name;
+        public string majorOrMinor;
+        public int[] caps;   // Navigator, Pilot, Engineer, Weapons, Science, Comms, Medical, Security
+        public string howToGet;
+        public string trait;
+    }
+
+    public static class Roles
+    {
+        public const int Navigator = 0, Pilot = 1, Engineer = 2, Weapons = 3, Science = 4, Comms = 5, Medical = 6, Security = 7;
+        public static readonly string[] Names = { "Navigator", "Pilot", "Engineer", "Weapons Officer", "Science Officer", "Communications Officer", "Medical Officer", "Security Chief" };
+    }
+
+    [Serializable] public class LoreRow { public string id; public string race; public string title; public string text; }
+
     [Serializable] public class CrewRoleRow { public string role; public string mainEffect; public float maxBonusAtSkill250; public string secondaryEffect; }
 
     [Serializable]
@@ -77,6 +106,9 @@ namespace FBTS
         public static ShipSystemRow[] ShipSystems = new ShipSystemRow[0];
         public static CrewRoleRow[] CrewRoles = new CrewRoleRow[0];
         public static DeadlineStageRow[] Deadline = new DeadlineStageRow[0];
+        public static UpgradeRow[] Upgrades = new UpgradeRow[0];
+        public static LoreRow[] Lore = new LoreRow[0];
+        public static SpeciesRow[] Species = new SpeciesRow[0];
 
         public static bool Loaded { get; private set; }
 
@@ -91,6 +123,9 @@ namespace FBTS
             ShipSystems = LoadTable<ShipSystemRow>("ShipSystems");
             CrewRoles = LoadTable<CrewRoleRow>("CrewRoles");
             Deadline = LoadTable<DeadlineStageRow>("DeadlineStages");
+            Upgrades = LoadTable<UpgradeRow>("Upgrades");
+            Lore = LoadTable<LoreRow>("Lore");
+            Species = LoadTable<SpeciesRow>("Species");
             Loaded = true;
             Debug.Log($"[FBTS] Data loaded: {Commodities.Length} commodities, {Hulls.Length} hulls, {Tuning.Count} tuning levers.");
         }
@@ -136,6 +171,26 @@ namespace FBTS
             float max = 0f;
             foreach (var r in CrewRoles) if (r.role == role) max = r.maxBonusAtSkill250;
             return skill / T("MaxSkill", 250f) * max;
+        }
+
+        /// <summary>Highest skill a species can reach in a role (see Roles for indices).</summary>
+        public static int SkillCap(string species, int role)
+        {
+            foreach (var sp in Species)
+                if (sp.name == species && sp.caps != null && role < sp.caps.Length) return sp.caps[role];
+            return (int)T("MaxSkill", 250f);
+        }
+
+        public static LoreRow LoreEntry(string id)
+        {
+            foreach (var l in Lore) if (l.id == id) return l;
+            return null;
+        }
+
+        public static UpgradeRow Upgrade(string id)
+        {
+            foreach (var u in Upgrades) if (u.id == id) return u;
+            return null;
         }
 
         public static ShipSystemRow ShipSystem(string system, string stat)

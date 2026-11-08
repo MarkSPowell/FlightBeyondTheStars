@@ -64,6 +64,34 @@ namespace FBTS
         float messageTime = -100f;
 
         GUIStyle labelStyle, headerStyle, worldLabelStyle, hintStyle;
+        bool showLoadMenu;
+
+        // Note pop-up (lore, captain's log)
+        bool noteOpen;
+        string noteTitle = "", noteBody = "";
+        float noteShownAt;
+        Vector2 noteScroll;
+
+        public void ShowNote(string title, string body)
+        {
+            noteTitle = title;
+            noteBody = body;
+            noteOpen = true;
+            noteShownAt = Time.time;
+            noteScroll = Vector2.zero;
+        }
+
+        public void ShowLog()
+        {
+            var sb = new System.Text.StringBuilder();
+            if (State.loreFound.Count == 0) sb.Append("No entries yet. Search ruins to find records of the galaxy's past.");
+            foreach (var id in State.loreFound)
+            {
+                var l = GameData.LoreEntry(id);
+                if (l != null) sb.Append($"{l.title} ({l.race})\n{l.text}\n\n");
+            }
+            ShowNote($"Captain's log - {State.loreFound.Count} of {GameData.Lore.Length} records", sb.ToString());
+        }
 
         void Awake()
         {
@@ -103,6 +131,37 @@ namespace FBTS
             view.Enter();
         }
 
+        void NoteGui(float w, float h)
+        {
+            var r = new Rect(w / 2 - 260, h / 2 - 170, 520, 340);
+            GUI.Box(r, GUIContent.none);
+            GUI.Box(r, GUIContent.none); // doubled for a more opaque backing
+            GUILayout.BeginArea(new Rect(r.x + 14, r.y + 12, r.width - 28, r.height - 24));
+            GUILayout.Label(noteTitle, headerStyle);
+            noteScroll = GUILayout.BeginScrollView(noteScroll);
+            GUILayout.Label(noteBody, labelStyle);
+            GUILayout.EndScrollView();
+            if (Button("Close (Space / E / Esc)")) noteOpen = false;
+            GUILayout.EndArea();
+        }
+
+        void LoadMenuGui(float w, float h)
+        {
+            var r = new Rect(w / 2 - 190, h / 2 - 110, 380, 220);
+            GUI.Box(r, GUIContent.none);
+            GUILayout.BeginArea(new Rect(r.x + 12, r.y + 10, r.width - 24, r.height - 20));
+            GUILayout.Label("Load game", headerStyle);
+            foreach (var slot in new[] { SaveSystem.QuickSlot, SaveSystem.AutoSlot })
+            {
+                var info = SaveSystem.Info(slot);
+                GUILayout.Label($"{(slot == SaveSystem.QuickSlot ? "Quick save (F5 / F9)" : "Autosave")}: {info.summary}", labelStyle);
+                if (Button("Load " + (slot == SaveSystem.QuickSlot ? "quick save" : "autosave"), info.exists)) LoadSlot(slot);
+            }
+            GUILayout.FlexibleSpace();
+            if (Button("Cancel")) showLoadMenu = false;
+            GUILayout.EndArea();
+        }
+
         /// <summary>A brief status line at the top centre of the screen that doesn't pause play.</summary>
         public void Toast(string text, float seconds)
         {
@@ -124,6 +183,42 @@ namespace FBTS
             Cam.transform.position = sharpness <= 0 ? t : Vector3.Lerp(p, t, 1f - Mathf.Exp(-sharpness * Time.deltaTime));
         }
 
+        // ---------------------------------------------------------------- Save / load
+
+        public bool CanSave(out string why)
+        {
+            why = null;
+            if (active != null || pending != null) why = "Can't save during a transition.";
+            else if (view is SurfaceView) why = "Can't save on a planet surface. Launch to orbit first.";
+            return why == null;
+        }
+
+        public void QuickSave() => SaveTo(SaveSystem.QuickSlot, false);
+
+        /// <summary>Called at safe moments (docking, arriving in a system). Silent unless it fails.</summary>
+        public void AutoSave() => SaveTo(SaveSystem.AutoSlot, true);
+
+        void SaveTo(string slot, bool quiet)
+        {
+            if (!CanSave(out var why)) { if (!quiet) Say(why); return; }
+            if (SaveSystem.Save(State, slot, out var err)) { if (!quiet) Toast("Game saved", 1.5f); }
+            else Say("Save failed: " + err);
+        }
+
+        public void LoadSlot(string slot)
+        {
+            if (active != null) return;
+            var loaded = SaveSystem.Load(slot, out var err);
+            if (loaded == null) { Say("Load failed: " + err); return; }
+            showLoadMenu = false;
+            State = loaded;
+            FadeColor = Color.black;
+            FadeAlpha = 1f;
+            Go(new SystemView(null));
+            FadeIn(0.6f);
+            Say($"Loaded {slot}: day {State.day} at {State.current.name}.");
+        }
+
         void Update()
         {
             ApplyPending();
@@ -132,6 +227,19 @@ namespace FBTS
             {
                 FadeAlpha = Mathf.Max(0f, FadeAlpha - fadeInSpeed * Time.deltaTime);
                 if (FadeAlpha <= 0f) fadeInSpeed = 0f;
+            }
+
+            var kb = UnityEngine.InputSystem.Keyboard.current;
+            if (kb != null && active == null)
+            {
+                if (kb.f5Key.wasPressedThisFrame) QuickSave();
+                if (kb.f9Key.wasPressedThisFrame) LoadSlot(SaveSystem.QuickSlot);
+            }
+
+            if (noteOpen)
+            {
+                if (Time.time - noteShownAt > 0.3f && Controls.Skip()) noteOpen = false;
+                return; // reading pauses the game
             }
 
             if (active != null)
@@ -224,10 +332,16 @@ namespace FBTS
             var st = State;
             var stage = st.Stage;
             GUI.Box(new Rect(0, 0, w, 34), GUIContent.none);
-            string bar = $"Credits {st.credits:N0} cr    Fuel {st.fuel:0.0}/{st.hull.fuelTank:0}    " +
+            string bar = $"Credits {st.credits:N0} cr    Fuel {st.fuel:0.0}/{st.FuelTank:0}    " +
                          $"Cargo {st.CargoUsed:0}/{st.CargoCapacity:0}    Day {st.day}    " +
                          $"Threat: {(stage != null ? stage.name : "-")}    System: {st.current.name}";
-            GUI.Label(new Rect(10, 7, w - 150, 24), bar, labelStyle);
+            GUI.Label(new Rect(10, 7, w - 370, 24), bar, labelStyle);
+            bool wasOn = GUI.enabled;
+            GUI.enabled = active == null;
+            if (GUI.Button(new Rect(w - 356, 5, 66, 24), "Log")) ShowLog();
+            if (GUI.Button(new Rect(w - 284, 5, 66, 24), "Save")) QuickSave();
+            if (GUI.Button(new Rect(w - 212, 5, 66, 24), "Load")) showLoadMenu = !showLoadMenu;
+            GUI.enabled = wasOn;
             if (GUI.Button(new Rect(w - 140, 5, 130, 24), AnimationsOn ? "Animations: On" : "Animations: Off"))
                 AnimationsOn = !AnimationsOn;
 
@@ -240,6 +354,9 @@ namespace FBTS
             view?.Gui();
             GUILayout.EndArea();
             GUI.enabled = was;
+
+            if (showLoadMenu) LoadMenuGui(w, h);
+            if (noteOpen) NoteGui(w, h);
 
             // Fade overlay
             if (FadeAlpha > 0.001f)
