@@ -1,0 +1,74 @@
+{
+  "items": [
+    {
+      "hullClass": "Light survey frigate",
+      "hullPoints": 400,
+      "armor": 2,
+      "moduleSlots": 3,
+      "cargoUnits": 50,
+      "crewBerths": 6,
+      "fuelTank": 40,
+      "speed": 100,
+      "turnRate": 100,
+      "jumpFuelMultiplier": 1,
+      "maxRangeOnFullTank": 40,
+      "cost": 0
+    },
+    {
+      "hullClass": "Corvette",
+      "hullPoints": 600,
+      "armor": 4,
+      "moduleSlots": 4,
+      "cargoUnits": 60,
+      "crewBerths": 8,
+      "fuelTank": 50,
+      "speed": 110,
+      "turnRate": 110,
+      "jumpFuelMultiplier": 0.95,
+      "maxRangeOnFullTank": 52.6315789473684,
+      "cost": 60000
+    },
+    {
+      "hullClass": "Explorer",
+      "hullPoints": 700,
+      "armor": 3,
+      "moduleSlots": 6,
+      "cargoUnits": 120,
+      "crewBerths": 10,
+      "fuelTank": 90,
+      "speed": 90,
+      "turnRate": 85,
+      "jumpFuelMultiplier": 0.8,
+      "maxRangeOnFullTank": 112.5,
+      "cost": 120000
+    },
+    {
+      "hullClass": "Freighter",
+      "hullPoints": 900,
+      "armor": 3,
+      "moduleSlots": 4,
+      "cargoUnits": 400,
+      "crewBerths": 8,
+      "fuelTank": 80,
+      "speed": 65,
+      "turnRate": 60,
+      "jumpFuelMultiplier": 1.25,
+      "maxRangeOnFullTank": 64,
+      "cost": 150000
+    },
+    {
+      "hullClass": "Cruiser",
+      "hullPoints": 1500,
+      "armor": 8,
+      "moduleSlots": 8,
+      "cargoUnits": 150,
+      "crewBerths": 14,
+      "fuelTank": 100,
+      "speed": 75,
+      "turnRate": 70,
+      "jumpFuelMultiplier": 1.15,
+      "maxRangeOnFullTank": 86.9565217391304,
+      "cost": 320000
+    }
+  ]
+}

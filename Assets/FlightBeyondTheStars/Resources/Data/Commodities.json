@@ -1,0 +1,264 @@
+{
+  "items": [
+    {
+      "commodity": "Iron ore",
+      "category": "Minerals",
+      "basePrice": 8,
+      "volatility": 0.2,
+      "minPrice": 6.4,
+      "maxPrice": 9.6,
+      "cargoUnitsPerUnit": 1,
+      "mainSource": "Mining outposts, rocky worlds"
+    },
+    {
+      "commodity": "Copper",
+      "category": "Minerals",
+      "basePrice": 14,
+      "volatility": 0.2,
+      "minPrice": 11.2,
+      "maxPrice": 16.8,
+      "cargoUnitsPerUnit": 1,
+      "mainSource": "Mining outposts"
+    },
+    {
+      "commodity": "Titanium",
+      "category": "Minerals",
+      "basePrice": 30,
+      "volatility": 0.25,
+      "minPrice": 22.5,
+      "maxPrice": 37.5,
+      "cargoUnitsPerUnit": 1,
+      "mainSource": "Mining outposts, asteroid belts"
+    },
+    {
+      "commodity": "Cobalt",
+      "category": "Minerals",
+      "basePrice": 45,
+      "volatility": 0.25,
+      "minPrice": 33.75,
+      "maxPrice": 56.25,
+      "cargoUnitsPerUnit": 1,
+      "mainSource": "Volcanic worlds"
+    },
+    {
+      "commodity": "Platinum",
+      "category": "Minerals",
+      "basePrice": 120,
+      "volatility": 0.3,
+      "minPrice": 84,
+      "maxPrice": 156,
+      "cargoUnitsPerUnit": 1,
+      "mainSource": "Rare deposits"
+    },
+    {
+      "commodity": "Rhodium",
+      "category": "Minerals",
+      "basePrice": 220,
+      "volatility": 0.35,
+      "minPrice": 143,
+      "maxPrice": 297,
+      "cargoUnitsPerUnit": 1,
+      "mainSource": "Very rare deposits, frontier"
+    },
+    {
+      "commodity": "Drive crystal ore",
+      "category": "Minerals",
+      "basePrice": 35,
+      "volatility": 0.3,
+      "minPrice": 24.5,
+      "maxPrice": 45.5,
+      "cargoUnitsPerUnit": 1,
+      "mainSource": "Fuel-bearing worlds; refines into fuel"
+    },
+    {
+      "commodity": "Drive crystal fuel",
+      "category": "Fuel",
+      "basePrice": 60,
+      "volatility": 0.2,
+      "minPrice": 48,
+      "maxPrice": 72,
+      "cargoUnitsPerUnit": 1,
+      "mainSource": "Refineries, starports"
+    },
+    {
+      "commodity": "Alloy plate",
+      "category": "Refined",
+      "basePrice": 55,
+      "volatility": 0.2,
+      "minPrice": 44,
+      "maxPrice": 66,
+      "cargoUnitsPerUnit": 1,
+      "mainSource": "Colonies with refineries"
+    },
+    {
+      "commodity": "Polymers",
+      "category": "Refined",
+      "basePrice": 35,
+      "volatility": 0.2,
+      "minPrice": 28,
+      "maxPrice": 42,
+      "cargoUnitsPerUnit": 1,
+      "mainSource": "Colonies"
+    },
+    {
+      "commodity": "Electronics",
+      "category": "Refined",
+      "basePrice": 120,
+      "volatility": 0.25,
+      "minPrice": 90,
+      "maxPrice": 150,
+      "cargoUnitsPerUnit": 1,
+      "mainSource": "Colonies, Orrun markets"
+    },
+    {
+      "commodity": "Grain",
+      "category": "Food & bio",
+      "basePrice": 10,
+      "volatility": 0.3,
+      "minPrice": 7,
+      "maxPrice": 13,
+      "cargoUnitsPerUnit": 1,
+      "mainSource": "Farming outposts, Thuum"
+    },
+    {
+      "commodity": "Protein culture",
+      "category": "Food & bio",
+      "basePrice": 25,
+      "volatility": 0.25,
+      "minPrice": 18.75,
+      "maxPrice": 31.25,
+      "cargoUnitsPerUnit": 1,
+      "mainSource": "Farming outposts"
+    },
+    {
+      "commodity": "Medicinal flora",
+      "category": "Food & bio",
+      "basePrice": 90,
+      "volatility": 0.35,
+      "minPrice": 58.5,
+      "maxPrice": 121.5,
+      "cargoUnitsPerUnit": 1,
+      "mainSource": "Jungle and ocean worlds"
+    },
+    {
+      "commodity": "Seeds",
+      "category": "Food & bio",
+      "basePrice": 40,
+      "volatility": 0.25,
+      "minPrice": 30,
+      "maxPrice": 50,
+      "cargoUnitsPerUnit": 1,
+      "mainSource": "Thuum, farming outposts"
+    },
+    {
+      "commodity": "Machinery",
+      "category": "Manufactured",
+      "basePrice": 150,
+      "volatility": 0.2,
+      "minPrice": 120,
+      "maxPrice": 180,
+      "cargoUnitsPerUnit": 2,
+      "mainSource": "Colony factories"
+    },
+    {
+      "commodity": "Consumer goods",
+      "category": "Manufactured",
+      "basePrice": 70,
+      "volatility": 0.25,
+      "minPrice": 52.5,
+      "maxPrice": 87.5,
+      "cargoUnitsPerUnit": 1,
+      "mainSource": "Colonies, Orrun markets"
+    },
+    {
+      "commodity": "Medical supplies",
+      "category": "Manufactured",
+      "basePrice": 110,
+      "volatility": 0.3,
+      "minPrice": 77,
+      "maxPrice": 143,
+      "cargoUnitsPerUnit": 1,
+      "mainSource": "Colonies"
+    },
+    {
+      "commodity": "Missiles",
+      "category": "Weapons & ammo",
+      "basePrice": 80,
+      "volatility": 0.3,
+      "minPrice": 56,
+      "maxPrice": 104,
+      "cargoUnitsPerUnit": 1,
+      "mainSource": "Munitions plants, Varkesh"
+    },
+    {
+      "commodity": "Ammo pack",
+      "category": "Weapons & ammo",
+      "basePrice": 30,
+      "volatility": 0.25,
+      "minPrice": 22.5,
+      "maxPrice": 37.5,
+      "cargoUnitsPerUnit": 1,
+      "mainSource": "Munitions plants"
+    },
+    {
+      "commodity": "Common specimen",
+      "category": "Specimens",
+      "basePrice": 60,
+      "volatility": 0.4,
+      "minPrice": 36,
+      "maxPrice": 84,
+      "cargoUnitsPerUnit": 2,
+      "mainSource": "Planet surveys"
+    },
+    {
+      "commodity": "Rare specimen",
+      "category": "Specimens",
+      "basePrice": 400,
+      "volatility": 0.5,
+      "minPrice": 200,
+      "maxPrice": 600,
+      "cargoUnitsPerUnit": 2,
+      "mainSource": "Hazardous worlds"
+    },
+    {
+      "commodity": "Minor artifact",
+      "category": "Artifacts",
+      "basePrice": 300,
+      "volatility": 0.5,
+      "minPrice": 150,
+      "maxPrice": 450,
+      "cargoUnitsPerUnit": 1,
+      "mainSource": "Ruins"
+    },
+    {
+      "commodity": "Major artifact",
+      "category": "Artifacts",
+      "basePrice": 1500,
+      "volatility": 0.6,
+      "minPrice": 600,
+      "maxPrice": 2400,
+      "cargoUnitsPerUnit": 1,
+      "mainSource": "Firstborn vaults, deep ruins"
+    },
+    {
+      "commodity": "Star chart",
+      "category": "Info",
+      "basePrice": 200,
+      "volatility": 0.4,
+      "minPrice": 120,
+      "maxPrice": 280,
+      "cargoUnitsPerUnit": 0,
+      "mainSource": "Navigation data; Ophane, Orrun"
+    },
+    {
+      "commodity": "Survey record (per planet)",
+      "category": "Info",
+      "basePrice": 50,
+      "volatility": 0.3,
+      "minPrice": 35,
+      "maxPrice": 65,
+      "cargoUnitsPerUnit": 0,
+      "mainSource": "Every fully scanned planet"
+    }
+  ]
+}

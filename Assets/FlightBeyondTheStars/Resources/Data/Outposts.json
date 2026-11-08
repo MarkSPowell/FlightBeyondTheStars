@@ -1,0 +1,76 @@
+{
+  "items": [
+    {
+      "outpostType": "Mining (titanium world)",
+      "kitCost": 20000,
+      "buildTime": 5,
+      "produces": "Titanium",
+      "unitsPerDay": 6,
+      "valuePerUnit": 30,
+      "upkeep": 40,
+      "crewNeeded": 1,
+      "dailyProfit": 140,
+      "payback": 142.857142857143
+    },
+    {
+      "outpostType": "Mining (iron world)",
+      "kitCost": 15000,
+      "buildTime": 4,
+      "produces": "Iron ore",
+      "unitsPerDay": 20,
+      "valuePerUnit": 8,
+      "upkeep": 30,
+      "crewNeeded": 1,
+      "dailyProfit": 130,
+      "payback": 115.384615384615
+    },
+    {
+      "outpostType": "Farming / bio",
+      "kitCost": 18000,
+      "buildTime": 6,
+      "produces": "Protein culture",
+      "unitsPerDay": 8,
+      "valuePerUnit": 25,
+      "upkeep": 30,
+      "crewNeeded": 1,
+      "dailyProfit": 170,
+      "payback": 105.882352941176
+    },
+    {
+      "outpostType": "Fuel refinery",
+      "kitCost": 30000,
+      "buildTime": 8,
+      "produces": "Drive crystal fuel",
+      "unitsPerDay": 4,
+      "valuePerUnit": 60,
+      "upkeep": 60,
+      "crewNeeded": 1,
+      "dailyProfit": 180,
+      "payback": 166.666666666667
+    },
+    {
+      "outpostType": "Research station",
+      "kitCost": 25000,
+      "buildTime": 7,
+      "produces": "Survey record (per planet)",
+      "unitsPerDay": 3,
+      "valuePerUnit": 50,
+      "upkeep": 50,
+      "crewNeeded": 2,
+      "dailyProfit": 100,
+      "payback": 250
+    },
+    {
+      "outpostType": "Listening post",
+      "kitCost": 12000,
+      "buildTime": 3,
+      "produces": "Star chart",
+      "unitsPerDay": 0.2,
+      "valuePerUnit": 200,
+      "upkeep": 20,
+      "crewNeeded": 0,
+      "dailyProfit": 20,
+      "payback": 600
+    }
+  ]
+}

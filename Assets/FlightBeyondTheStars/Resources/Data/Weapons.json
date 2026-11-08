@@ -1,0 +1,99 @@
+{
+  "items": [
+    {
+      "weapon": "Pulse laser",
+      "family": "Energy",
+      "damagePerShot": 12,
+      "shotsPerSecond": 2,
+      "damagePerSecond": 24,
+      "range": 600,
+      "powerDraw": 3,
+      "ammoPerShot": 0,
+      "cost": 5000
+    },
+    {
+      "weapon": "Beam laser",
+      "family": "Energy",
+      "damagePerShot": 30,
+      "shotsPerSecond": 1,
+      "damagePerSecond": 30,
+      "range": 500,
+      "powerDraw": 6,
+      "ammoPerShot": 0,
+      "cost": 14000,
+      "special": "Continuous; strong vs shields"
+    },
+    {
+      "weapon": "Mass driver",
+      "family": "Kinetic",
+      "damagePerShot": 25,
+      "shotsPerSecond": 1.5,
+      "damagePerSecond": 37.5,
+      "range": 700,
+      "powerDraw": 2,
+      "ammoPerShot": 1,
+      "cost": 8000,
+      "special": "Strong vs armor"
+    },
+    {
+      "weapon": "Missile rack",
+      "family": "Missile",
+      "damagePerShot": 80,
+      "shotsPerSecond": 0.25,
+      "damagePerSecond": 20,
+      "range": 1200,
+      "powerDraw": 1,
+      "ammoPerShot": 1,
+      "cost": 9000,
+      "special": "Can be shot down"
+    },
+    {
+      "weapon": "Torpedo",
+      "family": "Missile",
+      "damagePerShot": 300,
+      "shotsPerSecond": 0.08,
+      "damagePerSecond": 24,
+      "range": 1500,
+      "powerDraw": 2,
+      "ammoPerShot": 1,
+      "cost": 25000,
+      "special": "Slow; huge damage"
+    },
+    {
+      "weapon": "EMP projector",
+      "family": "Exotic",
+      "damagePerShot": 5,
+      "shotsPerSecond": 0.2,
+      "damagePerSecond": 1,
+      "range": 400,
+      "powerDraw": 8,
+      "ammoPerShot": 0,
+      "cost": 40000,
+      "special": "Disables target systems for 3 s"
+    },
+    {
+      "weapon": "Shield siphon",
+      "family": "Exotic",
+      "damagePerShot": 15,
+      "shotsPerSecond": 0.5,
+      "damagePerSecond": 7.5,
+      "range": 450,
+      "powerDraw": 7,
+      "ammoPerShot": 0,
+      "cost": 45000,
+      "special": "Drains target shields into yours"
+    },
+    {
+      "weapon": "Tractor beam",
+      "family": "Exotic",
+      "damagePerShot": 0,
+      "shotsPerSecond": 1,
+      "damagePerSecond": 0,
+      "range": 350,
+      "powerDraw": 5,
+      "ammoPerShot": 0,
+      "cost": 20000,
+      "special": "Holds target; pulls salvage"
+    }
+  ]
+}

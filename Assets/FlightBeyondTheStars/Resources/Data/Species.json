@@ -1,0 +1,228 @@
+{
+  "items": [
+    {
+      "name": "Humans",
+      "majorOrMinor": "Major",
+      "caps": [
+        150,
+        150,
+        150,
+        150,
+        150,
+        150,
+        150,
+        150
+      ],
+      "howToGet": "Available from the start",
+      "trait": "Adaptable: +25% XP, no morale clashes"
+    },
+    {
+      "name": "Noeti",
+      "majorOrMinor": "Major",
+      "caps": [
+        175,
+        75,
+        150,
+        50,
+        250,
+        200,
+        175,
+        50
+      ],
+      "howToGet": "Earn or buy",
+      "trait": "Archivist: instant artifact ID, faster translation"
+    },
+    {
+      "name": "Orrun Combine",
+      "majorOrMinor": "Major",
+      "caps": [
+        200,
+        125,
+        125,
+        75,
+        125,
+        250,
+        100,
+        100
+      ],
+      "howToGet": "Earn or buy",
+      "trait": "Haggler: better prices at every market"
+    },
+    {
+      "name": "Varkesh",
+      "majorOrMinor": "Major",
+      "caps": [
+        100,
+        225,
+        100,
+        250,
+        50,
+        75,
+        100,
+        250
+      ],
+      "howToGet": "Earn or buy",
+      "trait": "Fearless: no combat morale loss; bonus when outnumbered"
+    },
+    {
+      "name": "The Murmur",
+      "majorOrMinor": "Major",
+      "caps": [
+        125,
+        100,
+        250,
+        125,
+        200,
+        150,
+        150,
+        75
+      ],
+      "howToGet": "Earn or buy",
+      "trait": "Distributed: survives fatal injuries by losing part of the choir"
+    },
+    {
+      "name": "Skarrow",
+      "majorOrMinor": "Major",
+      "caps": [
+        150,
+        225,
+        225,
+        125,
+        100,
+        125,
+        75,
+        100
+      ],
+      "howToGet": "Earn or buy",
+      "trait": "Scrounger: repairs without parts; extra salvage"
+    },
+    {
+      "name": "Ophane",
+      "majorOrMinor": "Major",
+      "caps": [
+        250,
+        125,
+        75,
+        150,
+        175,
+        100,
+        150,
+        125
+      ],
+      "howToGet": "Earn or buy",
+      "trait": "Watchful: detects cloaks and ambushes; reveals hidden routes"
+    },
+    {
+      "name": "Thuum",
+      "majorOrMinor": "Major",
+      "caps": [
+        100,
+        175,
+        125,
+        25,
+        150,
+        150,
+        250,
+        125
+      ],
+      "howToGet": "Earn or buy",
+      "trait": "Steady: elite healers, very hard to kill; takes 2 berths"
+    },
+    {
+      "name": "Glimmerkin",
+      "majorOrMinor": "Minor",
+      "caps": [
+        75,
+        25,
+        75,
+        25,
+        225,
+        125,
+        75,
+        25
+      ],
+      "howToGet": "Only if uplifted",
+      "trait": "Science specialists (first-pass caps)"
+    },
+    {
+      "name": "Zhatt",
+      "majorOrMinor": "Minor",
+      "caps": [
+        100,
+        125,
+        75,
+        225,
+        50,
+        75,
+        75,
+        175
+      ],
+      "howToGet": "Earn",
+      "trait": "Weapons; ambush and harsh-conditions bonus (first-pass caps)"
+    },
+    {
+      "name": "The Hushed",
+      "majorOrMinor": "Minor",
+      "caps": [
+        225,
+        125,
+        100,
+        75,
+        125,
+        50,
+        75,
+        100
+      ],
+      "howToGet": "Earn",
+      "trait": "Navigator; stealth bonus (first-pass caps)"
+    },
+    {
+      "name": "The Cantari",
+      "majorOrMinor": "Minor",
+      "caps": [
+        100,
+        75,
+        75,
+        50,
+        125,
+        225,
+        100,
+        50
+      ],
+      "howToGet": "Earn",
+      "trait": "Comms through music (first-pass caps)"
+    },
+    {
+      "name": "Drone of the Deep",
+      "majorOrMinor": "Minor",
+      "caps": [
+        0,
+        0,
+        0,
+        0,
+        200,
+        0,
+        0,
+        0
+      ],
+      "howToGet": "Gift from the Deep",
+      "trait": "Science Officer only"
+    },
+    {
+      "name": "Purrlings",
+      "majorOrMinor": "Minor",
+      "caps": [
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10
+      ],
+      "howToGet": "Capture",
+      "trait": "No bonuses; bad at every job; morale unknown"
+    }
+  ]
+}

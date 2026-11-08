@@ -1,0 +1,364 @@
+{
+  "items": [
+    {
+      "race": "Humans",
+      "category": "Minerals",
+      "multiplier": 1.0
+    },
+    {
+      "race": "Humans",
+      "category": "Fuel",
+      "multiplier": 1.0
+    },
+    {
+      "race": "Humans",
+      "category": "Refined",
+      "multiplier": 1.0
+    },
+    {
+      "race": "Humans",
+      "category": "Food & bio",
+      "multiplier": 1.0
+    },
+    {
+      "race": "Humans",
+      "category": "Manufactured",
+      "multiplier": 1.0
+    },
+    {
+      "race": "Humans",
+      "category": "Weapons & ammo",
+      "multiplier": 1.0
+    },
+    {
+      "race": "Humans",
+      "category": "Specimens",
+      "multiplier": 1.0
+    },
+    {
+      "race": "Humans",
+      "category": "Artifacts",
+      "multiplier": 1.0
+    },
+    {
+      "race": "Humans",
+      "category": "Info",
+      "multiplier": 1.0
+    },
+    {
+      "race": "Noeti",
+      "category": "Minerals",
+      "multiplier": 0.8
+    },
+    {
+      "race": "Noeti",
+      "category": "Fuel",
+      "multiplier": 1.0
+    },
+    {
+      "race": "Noeti",
+      "category": "Refined",
+      "multiplier": 0.9
+    },
+    {
+      "race": "Noeti",
+      "category": "Food & bio",
+      "multiplier": 1.0
+    },
+    {
+      "race": "Noeti",
+      "category": "Manufactured",
+      "multiplier": 0.9
+    },
+    {
+      "race": "Noeti",
+      "category": "Weapons & ammo",
+      "multiplier": 0.5
+    },
+    {
+      "race": "Noeti",
+      "category": "Specimens",
+      "multiplier": 1.8
+    },
+    {
+      "race": "Noeti",
+      "category": "Artifacts",
+      "multiplier": 2.5
+    },
+    {
+      "race": "Noeti",
+      "category": "Info",
+      "multiplier": 1.5
+    },
+    {
+      "race": "Orrun Combine",
+      "category": "Minerals",
+      "multiplier": 1.0
+    },
+    {
+      "race": "Orrun Combine",
+      "category": "Fuel",
+      "multiplier": 1.1
+    },
+    {
+      "race": "Orrun Combine",
+      "category": "Refined",
+      "multiplier": 1.0
+    },
+    {
+      "race": "Orrun Combine",
+      "category": "Food & bio",
+      "multiplier": 1.0
+    },
+    {
+      "race": "Orrun Combine",
+      "category": "Manufactured",
+      "multiplier": 1.0
+    },
+    {
+      "race": "Orrun Combine",
+      "category": "Weapons & ammo",
+      "multiplier": 1.0
+    },
+    {
+      "race": "Orrun Combine",
+      "category": "Specimens",
+      "multiplier": 1.1
+    },
+    {
+      "race": "Orrun Combine",
+      "category": "Artifacts",
+      "multiplier": 1.2
+    },
+    {
+      "race": "Orrun Combine",
+      "category": "Info",
+      "multiplier": 1.4
+    },
+    {
+      "race": "Varkesh",
+      "category": "Minerals",
+      "multiplier": 0.8
+    },
+    {
+      "race": "Varkesh",
+      "category": "Fuel",
+      "multiplier": 1.1
+    },
+    {
+      "race": "Varkesh",
+      "category": "Refined",
+      "multiplier": 1.0
+    },
+    {
+      "race": "Varkesh",
+      "category": "Food & bio",
+      "multiplier": 1.0
+    },
+    {
+      "race": "Varkesh",
+      "category": "Manufactured",
+      "multiplier": 1.1
+    },
+    {
+      "race": "Varkesh",
+      "category": "Weapons & ammo",
+      "multiplier": 1.8
+    },
+    {
+      "race": "Varkesh",
+      "category": "Specimens",
+      "multiplier": 0.8
+    },
+    {
+      "race": "Varkesh",
+      "category": "Artifacts",
+      "multiplier": 0.7
+    },
+    {
+      "race": "Varkesh",
+      "category": "Info",
+      "multiplier": 0.9
+    },
+    {
+      "race": "The Murmur",
+      "category": "Minerals",
+      "multiplier": 0.9
+    },
+    {
+      "race": "The Murmur",
+      "category": "Fuel",
+      "multiplier": 1.0
+    },
+    {
+      "race": "The Murmur",
+      "category": "Refined",
+      "multiplier": 0.7
+    },
+    {
+      "race": "The Murmur",
+      "category": "Food & bio",
+      "multiplier": 1.6
+    },
+    {
+      "race": "The Murmur",
+      "category": "Manufactured",
+      "multiplier": 0.0
+    },
+    {
+      "race": "The Murmur",
+      "category": "Weapons & ammo",
+      "multiplier": 0.0
+    },
+    {
+      "race": "The Murmur",
+      "category": "Specimens",
+      "multiplier": 1.4
+    },
+    {
+      "race": "The Murmur",
+      "category": "Artifacts",
+      "multiplier": 1.0
+    },
+    {
+      "race": "The Murmur",
+      "category": "Info",
+      "multiplier": 1.2
+    },
+    {
+      "race": "Skarrow",
+      "category": "Minerals",
+      "multiplier": 0.9
+    },
+    {
+      "race": "Skarrow",
+      "category": "Fuel",
+      "multiplier": 1.2
+    },
+    {
+      "race": "Skarrow",
+      "category": "Refined",
+      "multiplier": 0.8
+    },
+    {
+      "race": "Skarrow",
+      "category": "Food & bio",
+      "multiplier": 1.0
+    },
+    {
+      "race": "Skarrow",
+      "category": "Manufactured",
+      "multiplier": 1.3
+    },
+    {
+      "race": "Skarrow",
+      "category": "Weapons & ammo",
+      "multiplier": 1.2
+    },
+    {
+      "race": "Skarrow",
+      "category": "Specimens",
+      "multiplier": 0.9
+    },
+    {
+      "race": "Skarrow",
+      "category": "Artifacts",
+      "multiplier": 1.2
+    },
+    {
+      "race": "Skarrow",
+      "category": "Info",
+      "multiplier": 0.8
+    },
+    {
+      "race": "Ophane",
+      "category": "Minerals",
+      "multiplier": 1.0
+    },
+    {
+      "race": "Ophane",
+      "category": "Fuel",
+      "multiplier": 1.0
+    },
+    {
+      "race": "Ophane",
+      "category": "Refined",
+      "multiplier": 1.0
+    },
+    {
+      "race": "Ophane",
+      "category": "Food & bio",
+      "multiplier": 1.0
+    },
+    {
+      "race": "Ophane",
+      "category": "Manufactured",
+      "multiplier": 1.0
+    },
+    {
+      "race": "Ophane",
+      "category": "Weapons & ammo",
+      "multiplier": 1.3
+    },
+    {
+      "race": "Ophane",
+      "category": "Specimens",
+      "multiplier": 1.0
+    },
+    {
+      "race": "Ophane",
+      "category": "Artifacts",
+      "multiplier": 1.6
+    },
+    {
+      "race": "Ophane",
+      "category": "Info",
+      "multiplier": 0.5
+    },
+    {
+      "race": "Thuum",
+      "category": "Minerals",
+      "multiplier": 1.0
+    },
+    {
+      "race": "Thuum",
+      "category": "Fuel",
+      "multiplier": 1.0
+    },
+    {
+      "race": "Thuum",
+      "category": "Refined",
+      "multiplier": 1.2
+    },
+    {
+      "race": "Thuum",
+      "category": "Food & bio",
+      "multiplier": 0.6
+    },
+    {
+      "race": "Thuum",
+      "category": "Manufactured",
+      "multiplier": 1.4
+    },
+    {
+      "race": "Thuum",
+      "category": "Weapons & ammo",
+      "multiplier": 0.0
+    },
+    {
+      "race": "Thuum",
+      "category": "Specimens",
+      "multiplier": 1.2
+    },
+    {
+      "race": "Thuum",
+      "category": "Artifacts",
+      "multiplier": 1.0
+    },
+    {
+      "race": "Thuum",
+      "category": "Info",
+      "multiplier": 1.0
+    }
+  ]
+}

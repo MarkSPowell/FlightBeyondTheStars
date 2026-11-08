@@ -1,0 +1,54 @@
+{
+  "items": [
+    {
+      "stage": 1,
+      "name": "Rumors",
+      "baseStartDay": 0,
+      "fuelPriceMultiplier": 1,
+      "routesSevered": 0,
+      "marketsLost": 0,
+      "adjustedStartDay": 0,
+      "whatThePlayerSees": "News of failing routes; first transmissions"
+    },
+    {
+      "stage": 2,
+      "name": "Rim goes dark",
+      "baseStartDay": 120,
+      "fuelPriceMultiplier": 1.15,
+      "routesSevered": 0.1,
+      "marketsLost": 0.05,
+      "adjustedStartDay": 335,
+      "whatThePlayerSees": "Rim regions cut off; Thuum stranded"
+    },
+    {
+      "stage": 3,
+      "name": "Major lanes fall",
+      "baseStartDay": 240,
+      "fuelPriceMultiplier": 1.4,
+      "routesSevered": 0.25,
+      "marketsLost": 0.15,
+      "adjustedStartDay": 455,
+      "whatThePlayerSees": "Trade lanes collapse; refugees; price spikes"
+    },
+    {
+      "stage": 4,
+      "name": "Galaxy splits",
+      "baseStartDay": 360,
+      "fuelPriceMultiplier": 1.8,
+      "routesSevered": 0.45,
+      "marketsLost": 0.3,
+      "adjustedStartDay": 575,
+      "whatThePlayerSees": "Galaxy in isolated pockets"
+    },
+    {
+      "stage": 5,
+      "name": "Home enclosed",
+      "baseStartDay": 480,
+      "fuelPriceMultiplier": 2.5,
+      "routesSevered": 0.7,
+      "marketsLost": 0.5,
+      "adjustedStartDay": 695,
+      "whatThePlayerSees": "Human region sealed; best endings locked"
+    }
+  ]
+}

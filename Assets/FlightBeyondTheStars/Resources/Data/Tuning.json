@@ -1,0 +1,68 @@
+{
+  "items": [
+    {
+      "key": "MaxSkill",
+      "value": 250.0
+    },
+    {
+      "key": "FuelPerLy",
+      "value": 1.0
+    },
+    {
+      "key": "FreeFlightMult",
+      "value": 3.0
+    },
+    {
+      "key": "FuelBasePrice",
+      "value": 60.0
+    },
+    {
+      "key": "TrainBase",
+      "value": 20.0
+    },
+    {
+      "key": "TrainScale",
+      "value": 100.0
+    },
+    {
+      "key": "TrainDaysPerPoint",
+      "value": 0.5
+    },
+    {
+      "key": "WageBase",
+      "value": 10.0
+    },
+    {
+      "key": "WagePerPoint",
+      "value": 0.2
+    },
+    {
+      "key": "XPPerDay",
+      "value": 0.2
+    },
+    {
+      "key": "BaseHit",
+      "value": 0.7
+    },
+    {
+      "key": "MinHit",
+      "value": 0.05
+    },
+    {
+      "key": "MaxHit",
+      "value": 0.95
+    },
+    {
+      "key": "EmptyStationPenalty",
+      "value": -0.2
+    },
+    {
+      "key": "DoubleDutyPenalty",
+      "value": 0.25
+    },
+    {
+      "key": "StartCredits",
+      "value": 10000.0
+    }
+  ]
+}

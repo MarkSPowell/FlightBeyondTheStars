@@ -1,0 +1,92 @@
+{
+  "items": [
+    {
+      "role": "Navigator",
+      "mainEffect": "Jump fuel cost",
+      "maxBonusAtSkill250": -0.3,
+      "skill50": -0.06,
+      "skill100": -0.12,
+      "skill150": -0.18,
+      "skill200": -0.24,
+      "skill250": -0.3,
+      "secondaryEffect": "Reveals map radius; finds hidden routes at high skill"
+    },
+    {
+      "role": "Pilot",
+      "mainEffect": "Evasion in combat",
+      "maxBonusAtSkill250": 0.3,
+      "skill50": 0.06,
+      "skill100": 0.12,
+      "skill150": 0.18,
+      "skill200": 0.24,
+      "skill250": 0.3,
+      "secondaryEffect": "+15% speed at max; safer landings"
+    },
+    {
+      "role": "Engineer",
+      "mainEffect": "Repair speed",
+      "maxBonusAtSkill250": 1,
+      "skill50": 0.2,
+      "skill100": 0.4,
+      "skill150": 0.6,
+      "skill200": 0.8,
+      "skill250": 1,
+      "secondaryEffect": "+20% power output at max"
+    },
+    {
+      "role": "Weapons Officer",
+      "mainEffect": "Accuracy",
+      "maxBonusAtSkill250": 0.3,
+      "skill50": 0.06,
+      "skill100": 0.12,
+      "skill150": 0.18,
+      "skill200": 0.24,
+      "skill250": 0.3,
+      "secondaryEffect": "+20% damage at max; called shots at 200+"
+    },
+    {
+      "role": "Science Officer",
+      "mainEffect": "Scan time reduction",
+      "maxBonusAtSkill250": -0.5,
+      "skill50": -0.1,
+      "skill100": -0.2,
+      "skill150": -0.3,
+      "skill200": -0.4,
+      "skill250": -0.5,
+      "secondaryEffect": "Artifact identification; planet value from orbit at 200+"
+    },
+    {
+      "role": "Communications Officer",
+      "mainEffect": "Trade prices in player's favor",
+      "maxBonusAtSkill250": 0.15,
+      "skill50": 0.03,
+      "skill100": 0.06,
+      "skill150": 0.09,
+      "skill200": 0.12,
+      "skill250": 0.15,
+      "secondaryEffect": "Translation speed +100% at max"
+    },
+    {
+      "role": "Medical Officer",
+      "mainEffect": "Injury recovery speed",
+      "maxBonusAtSkill250": 1,
+      "skill50": 0.2,
+      "skill100": 0.4,
+      "skill150": 0.6,
+      "skill200": 0.8,
+      "skill250": 1,
+      "secondaryEffect": "Chance to save a dying crew member: up to 50%"
+    },
+    {
+      "role": "Security Chief",
+      "mainEffect": "Ground and boarding combat",
+      "maxBonusAtSkill250": 0.4,
+      "skill50": 0.08,
+      "skill100": 0.16,
+      "skill150": 0.24,
+      "skill200": 0.32,
+      "skill250": 0.4,
+      "secondaryEffect": "Repel boarders; brig capacity"
+    }
+  ]
+}

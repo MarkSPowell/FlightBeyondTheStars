@@ -1,0 +1,68 @@
+{
+  "items": [
+    {
+      "facility": "Habitat core",
+      "buildCost": 40000,
+      "buildTime": 20,
+      "upkeep": 50,
+      "minPopulation": 0,
+      "effect": "Required first; supports 1,000 colonists"
+    },
+    {
+      "facility": "Farm district",
+      "buildCost": 25000,
+      "buildTime": 15,
+      "upkeep": 40,
+      "minPopulation": 500,
+      "effect": "Feeds 2,000 colonists; surplus sells as food"
+    },
+    {
+      "facility": "Refinery",
+      "buildCost": 50000,
+      "buildTime": 25,
+      "upkeep": 80,
+      "minPopulation": 1500,
+      "effect": "8 fuel units/day"
+    },
+    {
+      "facility": "Munitions plant",
+      "buildCost": 60000,
+      "buildTime": 25,
+      "upkeep": 90,
+      "minPopulation": 2000,
+      "effect": "Missiles and ammo at 70% of market price"
+    },
+    {
+      "facility": "Shipyard",
+      "buildCost": 120000,
+      "buildTime": 40,
+      "upkeep": 150,
+      "minPopulation": 4000,
+      "effect": "Hull and system upgrades at 85% price; repairs"
+    },
+    {
+      "facility": "Academy",
+      "buildCost": 80000,
+      "buildTime": 30,
+      "upkeep": 100,
+      "minPopulation": 3000,
+      "effect": "Crew training at 75% cost, 2x speed"
+    },
+    {
+      "facility": "Trade hub",
+      "buildCost": 70000,
+      "buildTime": 30,
+      "upkeep": 80,
+      "minPopulation": 2500,
+      "effect": "Sells colony goods; opens an internal trade route"
+    },
+    {
+      "facility": "Defense grid",
+      "buildCost": 90000,
+      "buildTime": 30,
+      "upkeep": 120,
+      "minPopulation": 2000,
+      "effect": "Protects against raids and Mother's drones"
+    }
+  ]
+}
