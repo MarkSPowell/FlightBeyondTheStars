@@ -11,7 +11,7 @@ namespace FBTS
     /// </summary>
     public static class SaveSystem
     {
-        public const int Version = 1;
+        public const int Version = 2;
         public const string QuickSlot = "quicksave";
         public const string AutoSlot = "autosave";
 
@@ -45,6 +45,22 @@ namespace FBTS
             public CargoEntry[] cargo;
             public int[] visitedSystems;
             public PlanetEntry[] planets;
+            // Version 2: diplomacy
+            public string[] repRaces;
+            public int[] repValues;
+            public string[] keywords;
+            public string[] inkRaces;
+            public string[] inkStates;
+            // World events (also version 2; older saves simply have none)
+            public string[] eventIds;
+            public int[] eventDays;
+            public int[] eventSystems;
+            public string posture;
+            // Combat (version 2 as well; missing in older saves means the defaults)
+            public int weaponsSkill;
+            public string[] weapons;
+            public int shieldTier;
+            public float hullDamage;
         }
 
         public class SlotInfo
@@ -84,6 +100,23 @@ namespace FBTS
                 var cargo = new List<CargoEntry>();
                 foreach (var kv in s.cargo) cargo.Add(new CargoEntry { commodity = kv.Key, amount = kv.Value });
                 d.cargo = cargo.ToArray();
+
+                d.repRaces = new List<string>(s.reputation.Keys).ToArray();
+                d.repValues = new int[d.repRaces.Length];
+                for (int i = 0; i < d.repRaces.Length; i++) d.repValues[i] = s.reputation[d.repRaces[i]];
+                d.keywords = new List<string>(s.keywords).ToArray();
+                d.inkRaces = new List<string>(s.inkStates.Keys).ToArray();
+                d.inkStates = new string[d.inkRaces.Length];
+                for (int i = 0; i < d.inkRaces.Length; i++) d.inkStates[i] = s.inkStates[d.inkRaces[i]];
+                d.posture = s.posture;
+                d.weaponsSkill = s.weaponsSkill;
+                d.weapons = s.weapons.ToArray();
+                d.shieldTier = s.shieldTier;
+                d.hullDamage = s.hullDamage;
+                d.eventIds = new List<string>(s.events.Keys).ToArray();
+                d.eventDays = new int[d.eventIds.Length];
+                d.eventSystems = new int[d.eventIds.Length];
+                for (int i = 0; i < d.eventIds.Length; i++) { d.eventDays[i] = s.events[d.eventIds[i]].day; d.eventSystems[i] = s.events[d.eventIds[i]].system; }
 
                 var visited = new List<int>();
                 var planets = new List<PlanetEntry>();
@@ -145,6 +178,20 @@ namespace FBTS
                 if (d.lore != null) s.loreFound.AddRange(d.lore);
                 if (d.cargo != null) foreach (var c in d.cargo) s.cargo[c.commodity] = c.amount;
                 s.fuel = Mathf.Min(d.fuel, s.FuelTank);
+                // Version 1 saves have no diplomacy; those arrays are simply missing.
+                if (d.repRaces != null && d.repValues != null)
+                    for (int i = 0; i < Mathf.Min(d.repRaces.Length, d.repValues.Length); i++) s.reputation[d.repRaces[i]] = d.repValues[i];
+                if (d.keywords != null) foreach (var k in d.keywords) s.keywords.Add(k);
+                if (d.inkRaces != null && d.inkStates != null)
+                    for (int i = 0; i < Mathf.Min(d.inkRaces.Length, d.inkStates.Length); i++) s.inkStates[d.inkRaces[i]] = d.inkStates[i];
+                if (!string.IsNullOrEmpty(d.posture)) s.posture = d.posture;
+                if (d.weaponsSkill > 0) s.weaponsSkill = d.weaponsSkill;
+                if (d.weapons != null && d.weapons.Length > 0) { s.weapons.Clear(); s.weapons.AddRange(d.weapons); }
+                if (d.shieldTier > 0) s.shieldTier = Mathf.Clamp(d.shieldTier, 1, 5);
+                s.hullDamage = Mathf.Max(0f, d.hullDamage);
+                if (d.eventIds != null && d.eventDays != null && d.eventSystems != null)
+                    for (int i = 0; i < d.eventIds.Length && i < d.eventDays.Length && i < d.eventSystems.Length; i++)
+                        s.events[d.eventIds[i]] = new WorldEvent { day = d.eventDays[i], system = d.eventSystems[i] };
 
                 if (d.currentSystem >= 0 && d.currentSystem < s.galaxy.systems.Count)
                     s.current = s.galaxy.systems[d.currentSystem];

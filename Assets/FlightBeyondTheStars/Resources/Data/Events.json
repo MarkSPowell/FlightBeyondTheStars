@@ -1,0 +1,57 @@
+{
+  "items": [
+    {
+      "id": "stage-2",
+      "name": "The rim goes dark",
+      "trigger": "Stage",
+      "stage": 2,
+      "spread": "News",
+      "description": "Anchors cut the rim systems off. Origin: the system farthest from Haven."
+    },
+    {
+      "id": "stage-3",
+      "name": "The major lanes fall",
+      "trigger": "Stage",
+      "stage": 3,
+      "spread": "News",
+      "description": "Main trade lanes collapse; refugees and price spikes."
+    },
+    {
+      "id": "stage-4",
+      "name": "The galaxy splits",
+      "trigger": "Stage",
+      "stage": 4,
+      "spread": "News",
+      "description": "The galaxy breaks into isolated pockets."
+    },
+    {
+      "id": "stage-5",
+      "name": "Home is enclosed",
+      "trigger": "Stage",
+      "stage": 5,
+      "spread": "Broadcast",
+      "description": "The human region is sealed. Everyone knows at once."
+    },
+    {
+      "id": "first-artifact",
+      "name": "Captain finds an artifact",
+      "trigger": "Player",
+      "spread": "News",
+      "description": "The captain recovers a Firstborn artifact from a ruin. Origin: that system."
+    },
+    {
+      "id": "mother-signal",
+      "name": "\"Return to me\"",
+      "trigger": "Story",
+      "spread": "Broadcast",
+      "description": "Mother's first transmission, heard on every band at once. Fired by story code (not yet built)."
+    },
+    {
+      "id": "first-anchor",
+      "name": "An Anchor wakes",
+      "trigger": "Story",
+      "spread": "News",
+      "description": "The first Anchor station activates and severs a route. Fired by story code (not yet built)."
+    }
+  ]
+}

@@ -95,7 +95,6 @@ namespace FBTS
                             {
                                 float d = Mathf.Max(0.5f, ruinRadius * 2f * tilesToMap);
                                 Draw.Dot("Ruin area", root, ToMap(centre), d, new Color(1f, 0.85f, 0.3f, 0.28f), 3);
-                                Draw.Dot("Ruin area centre", root, ToMap(centre), 0.18f, new Color(1f, 0.85f, 0.3f, 0.9f), 4);
                             }
                         }
             }
@@ -268,7 +267,7 @@ namespace FBTS
                 bool precise = ruinRadius <= GameData.T("RuinAreaMinRadius", 1.5f) + 0.01f;
                 GUILayout.Label(precise
                     ? $"Ruins located: {ruinAreas.Count}. Nearest: {nearest:0} km."
-                    : $"Possible ruins: {ruinAreas.Count} search areas (~{ruinRadius:0} km radius). Nearest centre: {nearest:0} km.", gm.Label);
+                    : $"Possible ruins: {ruinAreas.Count} search areas (~{ruinRadius:0} km radius). Nearest area: {nearest:0} km.", gm.Label);
             }
             if (S.current.territory != null) GUILayout.Label($"This system is {S.current.territory} territory.", gm.Hint);
 

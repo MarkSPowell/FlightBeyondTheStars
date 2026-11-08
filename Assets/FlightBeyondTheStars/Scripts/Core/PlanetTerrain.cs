@@ -209,7 +209,11 @@ namespace FBTS
         {
             var rng = new System.Random((int)(ruin.key ^ (ruin.key >> 32)) * 31 + 7);
             float ang = (float)(rng.NextDouble() * Mathf.PI * 2);
-            float dist = (float)rng.NextDouble() * radius * 0.7f;
+            // Uniform over an annulus (25%-90% of the radius): never near the middle, so the
+            // centre gives nothing away, and never right on the edge, so the circle still contains it.
+            float inner = 0.25f, outer = 0.9f;
+            float u = (float)rng.NextDouble();
+            float dist = radius * Mathf.Sqrt(Mathf.Lerp(inner * inner, outer * outer, u));
             return ruin.pos + new Vector2(Mathf.Cos(ang), Mathf.Sin(ang)) * dist;
         }
 

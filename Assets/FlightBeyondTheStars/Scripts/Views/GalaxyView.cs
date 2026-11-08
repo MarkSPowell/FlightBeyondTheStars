@@ -1,11 +1,16 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace FBTS
 {
-    /// <summary>Galaxy map: pick a destination and jump. Routes are cheap; free flight costs far more fuel and time.</summary>
+    /// <summary>Galaxy map: pick a destination and travel. Routes are cheap; free flight costs far more fuel and time.
+    /// Clicking a distant star plots a course of chained route jumps to it.</summary>
     public class GalaxyView : View
     {
         StarSystem selected;
+        List<Rules.Leg> course;      // cheapest chain of route jumps to the selected star (null = none)
+        Rules.Leg direct;            // straight-line free flight, offered when there's no direct route
+        Transform courseRoot;
 
         public override void Enter()
         {
@@ -48,13 +53,114 @@ namespace FBTS
                     float d = Vector2.Distance(world, s.pos);
                     if (d < best) { best = d; pick = s; }
                 }
-                if (pick != null) selected = pick;
+                if (pick != null) Select(pick);
             }
 
             if (Controls.Map()) gm.Go(new SystemView(null));
         }
 
-        void Jump(StarSystem target, float fuel, int days, bool route)
+        void Select(StarSystem target)
+        {
+            selected = target;
+            course = null;
+            direct = null;
+            if (target != S.current)
+            {
+                course = Rules.PlotCourse(S, S.current, target);
+                if (!S.galaxy.HasRoute(S.current, target)) direct = Rules.MakeLeg(S, S.current, target);
+            }
+            DrawCourse();
+        }
+
+        void DrawCourse()
+        {
+            if (courseRoot != null) Object.Destroy(courseRoot.gameObject);
+            courseRoot = new GameObject("Course").transform;
+            courseRoot.SetParent(root, false);
+            if (course == null) return;
+            var col = new Color(0.4f, 1f, 0.9f, 0.9f);
+            foreach (var leg in course)
+            {
+                Draw.Line("Leg", courseRoot, leg.from.pos, leg.to.pos, 0.3f, col, 2);
+                if (leg.to != selected) Draw.Dot("Waypoint", courseRoot, leg.to.pos, 1.8f, new Color(col.r, col.g, col.b, 0.35f), 4);
+            }
+        }
+
+        static float TotalFuel(List<Rules.Leg> legs) { float f = 0f; foreach (var l in legs) f += l.fuel; return f; }
+        static int TotalDays(List<Rules.Leg> legs) { int d = 0; foreach (var l in legs) d += l.days; return d; }
+
+        /// <summary>The longest start of the course the fuel tank can cover.</summary>
+        List<Rules.Leg> AffordablePart(List<Rules.Leg> legs)
+        {
+            var part = new List<Rules.Leg>();
+            float f = 0f;
+            foreach (var l in legs)
+            {
+                if (f + l.fuel > S.fuel + 0.0001f) break;
+                f += l.fuel;
+                part.Add(l);
+            }
+            return part;
+        }
+
+        /// <summary>Travel one or more legs as a single trip. Each leg's fuel and days are applied as the
+        /// animation passes it (or all at once if skipped), so intermediate systems are really visited.</summary>
+        void Travel(List<Rules.Leg> legs)
+        {
+            if (legs == null || legs.Count == 0) return;
+
+            // Chained courses can be intercepted at a waypoint: the trip stops there, ships waiting.
+            var rng = new System.Random(System.Environment.TickCount);
+            for (int i = 0; i < legs.Count - 1; i++)
+            {
+                var met = Encounter.Roll(S, legs[i].to, rng, Encounter.WaypointChance(S));
+                if (met == null) continue;
+                legs = legs.GetRange(0, i + 1);
+                S.pendingEncounter = met;
+                break;
+            }
+
+            bool route = legs[0].route;
+            var start = S.current;
+            int applied = 0;
+            float fuelUsed = 0f;
+            int daysUsed = 0;
+            System.Action<int> applyUpTo = count =>
+            {
+                for (; applied < count && applied < legs.Count; applied++)
+                {
+                    var l = legs[applied];
+                    S.fuel = Mathf.Max(0f, S.fuel - l.fuel);
+                    S.day += l.days;
+                    S.current = l.to;
+                    l.to.visited = true;
+                    fuelUsed += l.fuel;
+                    daysUsed += l.days;
+                }
+            };
+            int n = legs.Count;
+            Jump(legs[n - 1].to, route, n, n == 1 ? (route ? 4.5f : 6f) : 3.5f + 1.4f * n,
+                t =>
+                {
+                    int leg = Mathf.Min(n - 1, Mathf.FloorToInt(t * n));
+                    string where = n > 1 ? $"Jump {leg + 1} of {n}: {legs[leg].from.name} to {legs[leg].to.name}" :
+                        (route ? $"Jumping to {legs[0].to.name}" : $"Free flight to {legs[0].to.name}");
+                    return $"{where}  -  day {S.day}";
+                },
+                t => applyUpTo(Mathf.FloorToInt(t * n)),
+                () =>
+                {
+                    applyUpTo(n);
+                    S.justArrived = true;   // the system view rolls for an encounter
+                    string via = n > 1 ? $" via {n - 1} waypoint{(n > 2 ? "s" : "")}" : "";
+                    gm.Say(S.pendingEncounter != null
+                        ? $"Course interrupted at {S.current.name}: ships dropped out of hyperspace beside you! ({daysUsed} days, {fuelUsed:0.0} fuel)"
+                        : $"Arrived at {S.current.name} from {start.name}{via} after {daysUsed} days, using {fuelUsed:0.0} fuel.");
+                });
+        }
+
+        void Jump(StarSystem target, bool route, int legCount, float duration, System.Func<float, string> caption,
+                  System.Action<float> onProgress, System.Action onArrive)
         {
             const int N = 140;
             var streaks = new SpriteRenderer[N];
@@ -63,12 +169,11 @@ namespace FBTS
             var spd = new float[N];
             Vector2 c = new Vector2(5000f, 5000f); // empty space far from the map
             Color tint = route ? new Color(0.6f, 0.8f, 1f, 0.9f) : new Color(1f, 0.75f, 0.45f, 0.8f);
-            var from = S.current;
 
             gm.Play(new Cutscene
             {
-                duration = route ? 4.5f : 6f,
-                caption = t => (route ? $"Jumping to {target.name}" : $"Free flight to {target.name}") + $"  -  {days} days",
+                duration = duration,
+                caption = caption,
                 onStart = r =>
                 {
                     var rng = new System.Random(target.id * 7919 + S.day);
@@ -87,9 +192,11 @@ namespace FBTS
                 },
                 onUpdate = (t, dt) =>
                 {
+                    // On a chained course the streaks surge and ease once per jump.
+                    float lt = legCount > 1 ? Mathf.Repeat(t * legCount, 1f) : t;
                     float speed = route
-                        ? Mathf.Lerp(2f, 40f, Cutscene.Smooth(Cutscene.Phase(t, 0f, 0.5f))) * (1f - 0.7f * Cutscene.Phase(t, 0.8f, 1f))
-                        : Mathf.Lerp(1f, 12f, Cutscene.Smooth(Cutscene.Phase(t, 0f, 0.4f)));
+                        ? Mathf.Lerp(2f, 40f, Cutscene.Smooth(Cutscene.Phase(lt, 0f, 0.5f))) * (1f - 0.7f * Cutscene.Phase(lt, 0.8f, 1f))
+                        : Mathf.Lerp(1f, 12f, Cutscene.Smooth(Cutscene.Phase(lt, 0f, 0.4f)));
                     for (int i = 0; i < N; i++)
                     {
                         rad[i] += speed * spd[i] * dt;
@@ -101,13 +208,11 @@ namespace FBTS
                     }
                     gm.FadeColor = route ? Color.white : Color.black;
                     gm.FadeAlpha = Cutscene.Phase(t, 0.85f, 1f);
+                    onProgress(t);
                 },
                 onComplete = () =>
                 {
-                    S.fuel -= fuel;
-                    S.day += days;
-                    S.current = target;
-                    gm.Say($"Arrived at {target.name} from {from.name} after {days} days, using {fuel:0.0} fuel.");
+                    onArrive();
                     gm.FadeColor = route ? Color.white : Color.black;
                     gm.FadeAlpha = 1f;
                     gm.Go(new SystemView(null));
@@ -125,6 +230,38 @@ namespace FBTS
             }
         }
 
+        void CourseGui()
+        {
+            float fuel = TotalFuel(course);
+            int days = TotalDays(course);
+            int n = course.Count;
+            GUILayout.Label(n == 1 ? "Jump route" : $"Plotted course: {n} jumps", gm.Header);
+
+            var names = new List<string> { S.current.name };
+            var ports = new List<string>();
+            foreach (var l in course)
+            {
+                names.Add(l.to.name);
+                if (l.to != selected && l.to.starportRace != null) ports.Add(l.to.name);
+            }
+            if (n > 1) GUILayout.Label(string.Join(" > ", names), gm.Label);
+            GUILayout.Label($"Fuel needed: {fuel:0.0} (you have {S.fuel:0.0})\nTravel time: {days} days", gm.Label);
+            if (ports.Count > 0) GUILayout.Label("Refuel en route at: " + string.Join(", ", ports), gm.Hint);
+
+            if (S.fuel >= fuel)
+            {
+                if (gm.Button(n == 1 ? "Jump" : $"Engage course ({n} jumps)")) Travel(course);
+                return;
+            }
+            GUILayout.Label($"Not enough fuel for the whole course (short by {fuel - S.fuel:0.0}).", gm.Hint);
+            var part = AffordablePart(course);
+            if (part.Count > 0 && n > 1)
+            {
+                var stop = part[part.Count - 1].to;
+                if (gm.Button($"Go as far as fuel allows: {stop.name} ({part.Count} of {n})")) Travel(part);
+            }
+        }
+
         public override void Gui()
         {
             GUILayout.Label("Galaxy map", gm.Header);
@@ -134,22 +271,25 @@ namespace FBTS
 
             if (selected != null && selected != S.current)
             {
-                bool route = S.galaxy.HasRoute(S.current, selected);
                 float dist = Vector2.Distance(S.current.pos, selected.pos);
-                float fuel = Rules.JumpFuel(S, S.current, selected);
-                int days = Rules.TravelDays(S, S.current, selected);
-
                 GUILayout.Label(selected.name, gm.Header);
-                GUILayout.Label($"Distance: {dist:0.0} ly\n" +
-                                (route ? "Jump route: open" : "No jump route: free flight (slow, fuel-hungry)") +
-                                $"\nFuel needed: {fuel:0.0} (you have {S.fuel:0.0})\nTravel time: {days} days" +
+                GUILayout.Label($"Distance: {dist:0.0} ly" +
                                 (selected.starportRace != null ? $"\nStarport: {selected.starportRace}" : "") +
                                 $"\nTerritory: {(selected.territory ?? "unclaimed")}", gm.Label);
                 GUILayout.Label($"Navigator skill {S.navigatorSkill} saves {-GameData.RoleBonus("Navigator", S.navigatorSkill):P0} fuel.", gm.Hint);
+                GUILayout.Space(6);
 
-                if (gm.Button(route ? "Jump" : "Free flight", S.fuel >= fuel))
-                    Jump(selected, fuel, days, route);
-                if (S.fuel < fuel) GUILayout.Label("Not enough fuel.", gm.Hint);
+                if (course != null) CourseGui();
+                else GUILayout.Label("No jump routes connect these systems.", gm.Label);
+
+                if (direct != null)
+                {
+                    GUILayout.Space(8);
+                    GUILayout.Label("Free flight (direct)", gm.Header);
+                    GUILayout.Label($"Slow and fuel-hungry: {direct.fuel:0.0} fuel, {direct.days} days.", gm.Label);
+                    if (gm.Button("Free flight", S.fuel >= direct.fuel)) Travel(new List<Rules.Leg> { direct });
+                    if (S.fuel < direct.fuel) GUILayout.Label("Not enough fuel.", gm.Hint);
+                }
             }
             else
             {

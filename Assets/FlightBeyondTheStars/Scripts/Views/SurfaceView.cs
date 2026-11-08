@@ -319,7 +319,11 @@ namespace FBTS
             if (s.sprite != null) s.sprite.color = new Color(0.35f, 0.33f, 0.3f);
 
             string msg = $"Searched the ruins: found {amount} {found}" + (took < amount ? $" (room for {took})." : ".");
-            if (found.Contains("artifact")) msg += " A rare find!";
+            if (found.Contains("artifact"))
+            {
+                msg += " A rare find!";
+                WorldEvents.Fire(S, "first-artifact", S.current.id);
+            }
             gm.Say(msg);
 
             // Lore, if this planet is in a race's territory and that race has records left to find.

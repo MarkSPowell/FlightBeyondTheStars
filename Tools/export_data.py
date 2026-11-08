@@ -74,6 +74,10 @@ def main(path, out):
     write("ShipSystems", table(wb["ShipSystems"]))
     write("Weapons", table(wb["Weapons"]))
     write("Upgrades", table(wb["Upgrades"]))
+    if "Events" in wb.sheetnames:
+        write("Events", table(wb["Events"]))
+    if "Encounters" in wb.sheetnames:
+        write("Encounters", table(wb["Encounters"]))
     write("CrewRoles", table(wb["Crew"]))
 
     # Species: caps as a nested list in role order

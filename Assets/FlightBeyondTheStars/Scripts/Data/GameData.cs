@@ -52,6 +52,23 @@ namespace FBTS
     }
 
     [Serializable]
+    public class WeaponRow
+    {
+        public string weapon, family, special;
+        public float damagePerShot, shotsPerSecond, range, powerDraw, ammoPerShot, cost;
+    }
+
+    /// <summary>A kind of ship you can meet (Encounters tab).</summary>
+    [Serializable]
+    public class EncounterRow
+    {
+        public string id, name, race, behavior, weapons, lootGoods, notes;
+        public int count, minStage;
+        public float hullPoints, armor, shields, shieldRecharge, speed, weaponsSkill, pilotSkill, lootCredits, repOnKill, weight;
+        public string[] WeaponList => string.IsNullOrEmpty(weapons) ? new string[0] : weapons.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+    }
+
+    [Serializable]
     public class UpgradeRow
     {
         public string id;
@@ -80,6 +97,9 @@ namespace FBTS
 
     [Serializable] public class LoreRow { public string id; public string race; public string title; public string text; }
 
+    /// <summary>A significant universe event (Events tab). Trigger: Stage, Player or Story. Spread: News or Broadcast.</summary>
+    [Serializable] public class EventRow { public string id; public string name; public string trigger; public int stage; public string spread; public string description; }
+
     [Serializable] public class CrewRoleRow { public string role; public string mainEffect; public float maxBonusAtSkill250; public string secondaryEffect; }
 
     [Serializable]
@@ -107,7 +127,10 @@ namespace FBTS
         public static CrewRoleRow[] CrewRoles = new CrewRoleRow[0];
         public static DeadlineStageRow[] Deadline = new DeadlineStageRow[0];
         public static UpgradeRow[] Upgrades = new UpgradeRow[0];
+        public static WeaponRow[] Weapons = new WeaponRow[0];
+        public static EncounterRow[] Encounters = new EncounterRow[0];
         public static LoreRow[] Lore = new LoreRow[0];
+        public static EventRow[] Events = new EventRow[0];
         public static SpeciesRow[] Species = new SpeciesRow[0];
 
         public static bool Loaded { get; private set; }
@@ -124,7 +147,10 @@ namespace FBTS
             CrewRoles = LoadTable<CrewRoleRow>("CrewRoles");
             Deadline = LoadTable<DeadlineStageRow>("DeadlineStages");
             Upgrades = LoadTable<UpgradeRow>("Upgrades");
+            Weapons = LoadTable<WeaponRow>("Weapons");
+            Encounters = LoadTable<EncounterRow>("Encounters");
             Lore = LoadTable<LoreRow>("Lore");
+            Events = LoadTable<EventRow>("Events");
             Species = LoadTable<SpeciesRow>("Species");
             Loaded = true;
             Debug.Log($"[FBTS] Data loaded: {Commodities.Length} commodities, {Hulls.Length} hulls, {Tuning.Count} tuning levers.");
@@ -184,6 +210,26 @@ namespace FBTS
         public static LoreRow LoreEntry(string id)
         {
             foreach (var l in Lore) if (l.id == id) return l;
+            return null;
+        }
+
+        public static WeaponRow Weapon(string name)
+        {
+            if (name == null) return null;
+            name = name.Trim();
+            foreach (var w in Weapons) if (w.weapon == name) return w;
+            return null;
+        }
+
+        public static EncounterRow Encounter(string id)
+        {
+            foreach (var e in Encounters) if (e.id == id) return e;
+            return null;
+        }
+
+        public static EventRow Event(string id)
+        {
+            foreach (var e in Events) if (e.id == id) return e;
             return null;
         }
 

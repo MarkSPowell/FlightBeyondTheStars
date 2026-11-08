@@ -107,6 +107,82 @@
     {
       "key": "TrainPointsPerSession",
       "value": 10.0
+    },
+    {
+      "key": "RepPriceEffect",
+      "value": 0.002
+    },
+    {
+      "key": "RepSaleValue",
+      "value": 1000.0
+    },
+    {
+      "key": "NewsSpeed",
+      "value": 3.0
+    },
+    {
+      "key": "EncounterChance",
+      "value": 0.4
+    },
+    {
+      "key": "EncounterStageBonus",
+      "value": 0.05
+    },
+    {
+      "key": "EscapeDistance",
+      "value": 30.0
+    },
+    {
+      "key": "RangeScale",
+      "value": 0.01
+    },
+    {
+      "key": "FleeFuel",
+      "value": 2.0
+    },
+    {
+      "key": "RepairCostPerPoint",
+      "value": 12.0
+    },
+    {
+      "key": "TowCost",
+      "value": 2500.0
+    },
+    {
+      "key": "AttackRepPenalty",
+      "value": 10.0
+    },
+    {
+      "key": "EncounterWaypointChance",
+      "value": 0.2
+    },
+    {
+      "key": "InSystemEncounterInterval",
+      "value": 90.0
+    },
+    {
+      "key": "EncounterCooldown",
+      "value": 30.0
+    },
+    {
+      "key": "EscapeTime",
+      "value": 3.0
+    },
+    {
+      "key": "EmergencyJumpTime",
+      "value": 8.0
+    },
+    {
+      "key": "EmergencyJumpFuel",
+      "value": 5.0
+    },
+    {
+      "key": "RouteLyPerDay",
+      "value": 5.0
+    },
+    {
+      "key": "FreeFlightLyPerDay",
+      "value": 1.0
     }
   ]
 }

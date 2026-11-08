@@ -48,6 +48,7 @@ namespace FBTS
     {
         public int seed;
         public List<StarSystem> systems = new List<StarSystem>();
+        public readonly Dictionary<string, StarSystem> homeOf = new Dictionary<string, StarSystem>(); // race -> home system
 
         static readonly string[] Names =
         {
@@ -97,6 +98,7 @@ namespace FBTS
             if (g.systems.Count > 1) g.systems[1].starportRace = "Orrun Combine";
 
             var homes = AssignTerritories(g);
+            foreach (var h in homes) g.homeOf[h.Value] = h.Key;
             BuildRoutes(g);
             foreach (var s in g.systems) BuildPlanets(s, rng);
 

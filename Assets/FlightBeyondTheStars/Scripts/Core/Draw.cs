@@ -109,6 +109,46 @@ namespace FBTS
                 || (g != null && g.buttonSouth.wasPressedThisFrame);
         }
 
+        /// <summary>Attack, or in combat toggle weapons free / hold fire: F, or gamepad right trigger.</summary>
+        public static bool Attack()
+        {
+            var k = Keyboard.current;
+            var g = Gamepad.current;
+            return (k != null && k.fKey.wasPressedThisFrame) || (g != null && g.rightTrigger.wasPressedThisFrame);
+        }
+
+        /// <summary>Emergency jump out of a fight: J, or gamepad left trigger.</summary>
+        public static bool EmergencyJump()
+        {
+            var k = Keyboard.current;
+            var g = Gamepad.current;
+            return (k != null && k.jKey.wasPressedThisFrame) || (g != null && g.leftTrigger.wasPressedThisFrame);
+        }
+
+        /// <summary>Pause combat: P, or gamepad Start.</summary>
+        public static bool Pause()
+        {
+            var k = Keyboard.current;
+            var g = Gamepad.current;
+            return (k != null && k.pKey.wasPressedThisFrame) || (g != null && g.startButton.wasPressedThisFrame);
+        }
+
+        /// <summary>Cycle combat targets: Tab, or gamepad right shoulder.</summary>
+        public static bool NextTarget()
+        {
+            var k = Keyboard.current;
+            var g = Gamepad.current;
+            return (k != null && k.tabKey.wasPressedThisFrame) || (g != null && g.rightShoulder.wasPressedThisFrame);
+        }
+
+        /// <summary>Open a channel: H, or gamepad X.</summary>
+        public static bool Hail()
+        {
+            var k = Keyboard.current;
+            var g = Gamepad.current;
+            return (k != null && k.hKey.wasPressedThisFrame) || (g != null && g.buttonWest.wasPressedThisFrame);
+        }
+
         public static bool Skip()
         {
             var k = Keyboard.current;

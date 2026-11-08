@@ -63,8 +63,12 @@ namespace FBTS
         float toastUntil;
         float messageTime = -100f;
 
-        GUIStyle labelStyle, headerStyle, worldLabelStyle, hintStyle;
+        GUIStyle labelStyle, headerStyle, worldLabelStyle, hintStyle, richStyle, narrationStyle, choiceStyle;
         bool showLoadMenu;
+        string confirmLoadSlot;     // F9 asks before loading, so a stray key press can't wipe progress
+        float confirmShownAt;
+        bool confirmYes, confirmNo;
+        string confirmSummary;
 
         // Note pop-up (lore, captain's log)
         bool noteOpen;
@@ -79,6 +83,155 @@ namespace FBTS
             noteOpen = true;
             noteShownAt = Time.time;
             noteScroll = Vector2.zero;
+        }
+
+        // ---------------------------------------------------------------- Conversations
+
+        public Conversation Talk { get; private set; }
+        float talkOpenedAt;
+        Vector2 talkScroll;
+        int talkLinesSeen;
+        float lastMoveY;
+        // GUI clicks are applied at the start of the next Update, so IMGUI's layout never changes mid-frame.
+        class HailRequest
+        {
+            public string race, entry, where;
+            public System.Collections.Generic.Dictionary<string, object> vars;
+            public System.Action onAttack, onStandDown, onClose;
+        }
+        HailRequest pendingHail;
+        System.Action talkOnClose;
+        int pendingChoice = -1;
+        bool pendingClose;
+
+        /// <summary>Open a channel to a race. Entry is the Ink knot ("station", "homeworld").</summary>
+        public void Hail(string race, string entry, string where,
+            System.Collections.Generic.Dictionary<string, object> vars = null,
+            System.Action onAttack = null, System.Action onStandDown = null, System.Action onClose = null)
+        {
+            if (Talk != null || active != null) return;
+            pendingHail = new HailRequest { race = race, entry = entry, where = where, vars = vars, onAttack = onAttack, onStandDown = onStandDown, onClose = onClose };
+        }
+
+        void OpenPendingHail()
+        {
+            var h = pendingHail;
+            pendingHail = null;
+            Talk = Conversation.Open(this, h.race, h.entry, h.where, h.vars, h.onAttack, h.onStandDown);
+            if (Talk == null) { h.onClose?.Invoke(); return; }
+            talkOnClose = h.onClose;
+            talkOpenedAt = Time.time;
+            talkLinesSeen = 0;
+        }
+
+        void CloseTalk()
+        {
+            if (Talk == null) return;
+            Talk.Close();
+            Talk = null;
+            Say("Channel closed.");
+            var after = talkOnClose;
+            talkOnClose = null;
+            after?.Invoke();
+        }
+
+        static string RepWord(int r) =>
+            r <= -40 ? "Hostile" : r < -10 ? "Wary" : r < 10 ? "Neutral" : r < 30 ? "Friendly" : "Trusted";
+
+        void TalkTick()
+        {
+            var kb = UnityEngine.InputSystem.Keyboard.current;
+            var pad = UnityEngine.InputSystem.Gamepad.current;
+            bool fresh = Time.time - talkOpenedAt < 0.25f;  // ignore the key press that opened the channel
+
+            if (pendingClose) { pendingClose = false; CloseTalk(); return; }
+            if (pendingChoice >= 0) { int c = pendingChoice; pendingChoice = -1; Talk.Choose(c); return; }
+
+            if ((kb != null && kb.escapeKey.wasPressedThisFrame) || (pad != null && pad.buttonEast.wasPressedThisFrame))
+            {
+                CloseTalk();
+                return;
+            }
+
+            // Posture: Tab or the shoulder buttons
+            int pi = System.Array.IndexOf(Conversation.Postures, Talk.posture);
+            if ((kb != null && kb.tabKey.wasPressedThisFrame) || (pad != null && pad.rightShoulder.wasPressedThisFrame))
+                Talk.SetPosture(Conversation.Postures[(pi + 1) % Conversation.Postures.Length]);
+            if (pad != null && pad.leftShoulder.wasPressedThisFrame)
+                Talk.SetPosture(Conversation.Postures[(pi + Conversation.Postures.Length - 1) % Conversation.Postures.Length]);
+
+            if (Talk.Finished)
+            {
+                if (!fresh && Controls.Action()) CloseTalk();
+                return;
+            }
+
+            // Choose with number keys, or move the highlight with up/down and confirm with E / Space / A
+            if (kb != null)
+                for (int i = 0; i < Mathf.Min(9, Talk.choices.Count); i++)
+                    if (kb[(UnityEngine.InputSystem.Key)((int)UnityEngine.InputSystem.Key.Digit1 + i)].wasPressedThisFrame) { Talk.Choose(i); return; }
+
+            float y = Controls.Move().y;
+            if (y > 0.5f && lastMoveY <= 0.5f) Talk.selected = Mathf.Max(0, Talk.selected - 1);
+            if (y < -0.5f && lastMoveY >= -0.5f) Talk.selected = Mathf.Min(Talk.choices.Count - 1, Talk.selected + 1);
+            lastMoveY = y;
+            if (!fresh && Controls.Action()) Talk.Choose(Talk.selected);
+        }
+
+        void TalkGui(float w, float h)
+        {
+            float ww = Mathf.Min(760f, w - 40f), wh = Mathf.Min(560f, h - 100f);
+            var r = new Rect((w - ww) / 2f, 50f, ww, wh);
+            GUI.Box(r, GUIContent.none);
+            GUI.Box(r, GUIContent.none);
+            GUILayout.BeginArea(new Rect(r.x + 14, r.y + 10, r.width - 28, r.height - 20));
+
+            GUILayout.Label(Talk.Title, headerStyle);
+            int rep = Talk.Reputation;
+            GUILayout.BeginHorizontal();
+            GUILayout.Label($"Their opinion of us: {RepWord(rep)} ({rep:+0;-0;0})   Comms Officer skill {State.commsSkill}", hintStyle);
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Posture (Tab):", labelStyle, GUILayout.Width(110));
+            int pi = System.Array.IndexOf(Conversation.Postures, Talk.posture);
+            int np = GUILayout.Toolbar(pi, new[] { "Friendly", "Obsequious", "Hostile" }, GUILayout.Height(26));
+            if (np != pi) Talk.SetPosture(Conversation.Postures[np]);
+            GUILayout.EndHorizontal();
+            GUILayout.Space(4);
+
+            // Transcript, kept scrolled to the newest line
+            if (Talk.transcript.Count != talkLinesSeen) { talkLinesSeen = Talk.transcript.Count; talkScroll.y = float.MaxValue; }
+            talkScroll = GUILayout.BeginScrollView(talkScroll, GUILayout.ExpandHeight(true));
+            foreach (var line in Talk.transcript)
+            {
+                if (line.speaker == null)
+                    GUILayout.Label($"<i>{line.text}</i>", narrationStyle);
+                else if (line.captain)
+                    GUILayout.Label($"<color=#7fe0ff><b>Captain:</b></color> {line.text}", richStyle);
+                else
+                    GUILayout.Label($"<color=#ffd27f><b>{line.speaker}:</b></color> {line.text}", richStyle);
+                GUILayout.Space(2);
+            }
+            GUILayout.EndScrollView();
+            GUILayout.Space(6);
+
+            if (Talk.Finished)
+            {
+                GUILayout.Label("The channel has closed.", hintStyle);
+                if (Button("End transmission (E / Esc)")) pendingClose = true;
+            }
+            else
+            {
+                for (int i = 0; i < Talk.choices.Count; i++)
+                {
+                    string mark = i == Talk.selected ? "> " : "   ";
+                    if (GUILayout.Button($"{mark}{i + 1}. {Talk.choices[i]}", choiceStyle, GUILayout.Height(26))) pendingChoice = i;
+                }
+                GUILayout.Space(4);
+                if (Button("Close channel (Esc)")) pendingClose = true;
+            }
+            GUILayout.EndArea();
         }
 
         public void ShowLog()
@@ -189,7 +342,9 @@ namespace FBTS
         {
             why = null;
             if (active != null || pending != null) why = "Can't save during a transition.";
+            else if (Talk != null) why = "Close the channel first.";
             else if (view is SurfaceView) why = "Can't save on a planet surface. Launch to orbit first.";
+            else if (view is CombatView) why = "Can't save in the middle of a fight.";
             return why == null;
         }
 
@@ -205,9 +360,54 @@ namespace FBTS
             else Say("Save failed: " + err);
         }
 
+        void AskLoad(string slot)
+        {
+            if (active != null) return;
+            var info = SaveSystem.Info(slot);
+            if (!info.exists) { Say("No quick save to load yet. Press F5 to save."); return; }
+            confirmSummary = info.summary;
+            confirmLoadSlot = slot;
+            confirmShownAt = Time.time;
+            confirmYes = confirmNo = false;
+        }
+
+        void ConfirmLoadTick(UnityEngine.InputSystem.Keyboard kb)
+        {
+            var pad = UnityEngine.InputSystem.Gamepad.current;
+            bool ready = Time.time - confirmShownAt > 0.2f;
+            bool yes = confirmYes || (ready && (Controls.Action() || (kb != null && (kb.yKey.wasPressedThisFrame || kb.enterKey.wasPressedThisFrame))));
+            bool no = confirmNo || (kb != null && (kb.escapeKey.wasPressedThisFrame || kb.nKey.wasPressedThisFrame))
+                      || (pad != null && pad.buttonEast.wasPressedThisFrame);
+            confirmYes = confirmNo = false;
+            if (no) { confirmLoadSlot = null; return; }
+            if (yes)
+            {
+                var slot = confirmLoadSlot;
+                confirmLoadSlot = null;
+                LoadSlot(slot);
+            }
+        }
+
+        void ConfirmLoadGui(float w, float h)
+        {
+            var r = new Rect(w / 2 - 210, h / 2 - 80, 420, 160);
+            GUI.Box(r, GUIContent.none);
+            GUI.Box(r, GUIContent.none);
+            GUILayout.BeginArea(new Rect(r.x + 14, r.y + 12, r.width - 28, r.height - 24));
+            GUILayout.Label("Load quick save?", headerStyle);
+            GUILayout.Label($"{confirmSummary}\nAnything since then will be lost.", labelStyle);
+            GUILayout.FlexibleSpace();
+            GUILayout.BeginHorizontal();
+            if (Button("Load (E / Y)")) confirmYes = true;
+            if (Button("Cancel (Esc / N)")) confirmNo = true;
+            GUILayout.EndHorizontal();
+            GUILayout.EndArea();
+        }
+
         public void LoadSlot(string slot)
         {
             if (active != null) return;
+            if (Talk != null) CloseTalk();
             var loaded = SaveSystem.Load(slot, out var err);
             if (loaded == null) { Say("Load failed: " + err); return; }
             showLoadMenu = false;
@@ -233,7 +433,29 @@ namespace FBTS
             if (kb != null && active == null)
             {
                 if (kb.f5Key.wasPressedThisFrame) QuickSave();
-                if (kb.f9Key.wasPressedThisFrame) LoadSlot(SaveSystem.QuickSlot);
+                if (kb.f9Key.wasPressedThisFrame && confirmLoadSlot == null) AskLoad(SaveSystem.QuickSlot);
+#if UNITY_EDITOR
+                // Testing aid (editor only): jump the calendar ahead to reach later threat stages and their news.
+                if (kb.f10Key.wasPressedThisFrame && Talk == null)
+                {
+                    State.day += 30;
+                    foreach (var e in WorldEvents.Sync(State)) Say($"News on the open band: {e.name}.");
+                    Toast($"Debug: day {State.day}", 1.5f);
+                }
+#endif
+            }
+
+            if (confirmLoadSlot != null)
+            {
+                ConfirmLoadTick(kb);
+                return; // the question pauses the game
+            }
+
+            if (pendingHail != null && active == null) OpenPendingHail();
+            if (Talk != null)
+            {
+                TalkTick();
+                return; // conversations pause the game
             }
 
             if (noteOpen)
@@ -297,6 +519,10 @@ namespace FBTS
             hintStyle = new GUIStyle(labelStyle) { fontSize = 12 };
             hintStyle.normal.textColor = new Color(0.65f, 0.7f, 0.8f);
             worldLabelStyle = new GUIStyle(labelStyle) { alignment = TextAnchor.UpperCenter, fontSize = 12, wordWrap = false };
+            richStyle = new GUIStyle(labelStyle) { richText = true, fontSize = 15 };
+            narrationStyle = new GUIStyle(richStyle);
+            narrationStyle.normal.textColor = new Color(0.7f, 0.74f, 0.82f);
+            choiceStyle = new GUIStyle(GUI.skin.button) { alignment = TextAnchor.MiddleLeft, fontSize = 14, wordWrap = false };
         }
 
         public GUIStyle Label { get { EnsureStyles(); return labelStyle; } }
@@ -332,12 +558,12 @@ namespace FBTS
             var st = State;
             var stage = st.Stage;
             GUI.Box(new Rect(0, 0, w, 34), GUIContent.none);
-            string bar = $"Credits {st.credits:N0} cr    Fuel {st.fuel:0.0}/{st.FuelTank:0}    " +
+            string bar = $"Credits {st.credits:N0} cr    Fuel {st.fuel:0.0}/{st.FuelTank:0}    Hull {st.Hull:0}/{st.HullMax:0}    " +
                          $"Cargo {st.CargoUsed:0}/{st.CargoCapacity:0}    Day {st.day}    " +
                          $"Threat: {(stage != null ? stage.name : "-")}    System: {st.current.name}";
             GUI.Label(new Rect(10, 7, w - 370, 24), bar, labelStyle);
             bool wasOn = GUI.enabled;
-            GUI.enabled = active == null;
+            GUI.enabled = active == null && Talk == null;
             if (GUI.Button(new Rect(w - 356, 5, 66, 24), "Log")) ShowLog();
             if (GUI.Button(new Rect(w - 284, 5, 66, 24), "Save")) QuickSave();
             if (GUI.Button(new Rect(w - 212, 5, 66, 24), "Load")) showLoadMenu = !showLoadMenu;
@@ -349,14 +575,16 @@ namespace FBTS
 
             // Left info panel, filled by the active view (read-only while a transition plays)
             bool was = GUI.enabled;
-            GUI.enabled = active == null;
+            GUI.enabled = active == null && Talk == null;
             GUILayout.BeginArea(new Rect(10, 44, PanelWidth, h - 110), GUI.skin.box);
             view?.Gui();
             GUILayout.EndArea();
             GUI.enabled = was;
 
             if (showLoadMenu) LoadMenuGui(w, h);
+            if (Talk != null) TalkGui(w, h);
             if (noteOpen) NoteGui(w, h);
+            if (confirmLoadSlot != null) ConfirmLoadGui(w, h);
 
             // Fade overlay
             if (FadeAlpha > 0.001f)
