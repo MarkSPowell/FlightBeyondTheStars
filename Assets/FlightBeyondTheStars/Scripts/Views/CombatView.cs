@@ -39,6 +39,9 @@ namespace FBTS
         readonly List<Shot> shots = new List<Shot>();
 
         class Flash { public SpriteRenderer sprite; public float life, max; }
+
+        readonly List<string> injuries = new List<string>();
+        bool lost;   // the whole crew died: the game manager starts over, so don't go anywhere
         readonly List<Flash> flashes = new List<Flash>();
 
         public CombatView(Encounter encounter, Vector2 returnTo)
@@ -80,9 +83,10 @@ namespace FBTS
                 hull = S.Hull,
                 hullMax = S.HullMax,
                 shieldMax = S.ShieldCapacity,
-                recharge = S.ShieldRecharge,
+                recharge = S.ShieldRecharge * (1f + S.Trait("ShieldRecharge")),
                 armor = S.Armor,
-                speed = (S.hull != null ? S.hull.speed : 100f) / 100f * 5f * (1f + 0.15f * S.pilotSkill / GameData.T("MaxSkill", 250f)),
+                speed = (S.hull != null ? S.hull.speed : 100f) / 100f * 5f * (1f + 0.15f * S.pilotSkill / GameData.T("MaxSkill", 250f))
+                        * (1f + S.Trait("CombatSpeed")),
                 pilotSkill = S.pilotSkill,
                 weaponsSkill = S.weaponsSkill,
                 pos = new Vector2(0f, -6f)
@@ -122,9 +126,11 @@ namespace FBTS
 
         void Build(Combatant c, Color color, float size)
         {
-            c.body = Draw.Ship(c.name, root, color, size);
+            string kind = c.isPlayer ? "player" : Art.ShipKind(c.row.race);
+            c.body = Art.Ship(kind, c.name, root, color, size * 2f);
             c.body.localPosition = c.pos;
-            c.bubble = Draw.Dot("Shield", c.body, Vector2.zero, size * 2.2f, new Color(0.4f, 0.7f, 1f, 0.25f), 8);
+            c.rig = c.body.GetComponent<ShipRig>();
+            c.bubble = Draw.Dot("Shield", c.body, Vector2.zero, size * 2.6f, new Color(0.4f, 0.7f, 1f, 0.25f), 8);
         }
 
         // ---------------------------------------------------------------- Update
@@ -143,6 +149,8 @@ namespace FBTS
             if (paused) return;
 
             elapsed += dt;
+            Crew.Gain(S, Roles.Pilot, GameData.T("XpPilotSecond", 0.08f) * dt);
+            Crew.Gain(S, Roles.Engineer, GameData.T("XpEngineerSecond", 0.05f) * dt);
             Pilot(dt);
             if (over) return;
             foreach (var e in enemies) if (e.Active) Think(e, dt);
@@ -152,6 +160,11 @@ namespace FBTS
                 if (!c.Active) continue;
                 c.shields = Mathf.Min(c.shieldMax, c.shields + c.recharge * dt);
                 Fire(c, c.isPlayer ? (weaponsFree ? target : null) : me, dt);
+                if (c.rig != null)
+                {
+                    var aimAt = c.isPlayer ? target : me;
+                    c.rig.aim = aimAt != null && aimAt.Active ? aimAt.pos : (Vector2?)null;
+                }
                 c.body.localPosition = c.pos;
                 if (c.vel.sqrMagnitude > 0.01f)
                     c.body.localRotation = Quaternion.Euler(0, 0, Mathf.Atan2(c.vel.y, c.vel.x) * Mathf.Rad2Deg);
@@ -226,7 +239,8 @@ namespace FBTS
             return c.escapeTimer >= EscapeTime;
         }
 
-        float JumpSpoolTime => GameData.T("EmergencyJumpTime", 8f) * (1f - 0.5f * S.navigatorSkill / GameData.T("MaxSkill", 250f));
+        float JumpSpoolTime => GameData.T("EmergencyJumpTime", 8f) * (1f - 0.5f * S.navigatorSkill / GameData.T("MaxSkill", 250f))
+                                 * (1f - S.Trait("EmergencyJump"));
         float JumpFuel => GameData.T("EmergencyJumpFuel", 5f);
 
         /// <summary>The Navigator spools an emergency jump: we keep fighting (and taking fire) until it's ready.
@@ -282,10 +296,14 @@ namespace FBTS
                 m.cooldown -= dt;
                 if (at == null || !at.Active || m.cooldown > 0f) continue;
                 if (Vector2.Distance(c.pos, at.pos) > m.Range) continue;
-                m.cooldown = 1f / Mathf.Max(0.05f, m.row.shotsPerSecond);
-
-                bool hit = Random.value < CombatRules.HitChance(c.weaponsSkill, at.pilotSkill);
-                float dmg = CombatRules.DamagePerShot(m.row, c.weaponsSkill);
+                // Our traits: Gunnery Drills (reload), Sharpshooter (hit), Heavy Hitter (damage); theirs vs our Evasive Flyer.
+                m.cooldown = 1f / Mathf.Max(0.05f, m.row.shotsPerSecond) / (c.isPlayer ? 1f + S.Trait("FireRate") : 1f);
+                float chance = CombatRules.HitChance(c.weaponsSkill, at.pilotSkill)
+                               + (c.isPlayer ? S.Trait("HitChance") : 0f) - (at.isPlayer ? S.Trait("Evasion") : 0f);
+                bool hit = Random.value < Mathf.Clamp(chance, GameData.T("MinHit", 0.05f), GameData.T("MaxHit", 0.95f));
+                float dmg = CombatRules.DamagePerShot(m.row, c.weaponsSkill) * (c.isPlayer ? 1f + S.Trait("Damage") : 1f);
+                if (c.isPlayer)
+                    Crew.Gain(S, Roles.Weapons, GameData.T("XpWeaponsShot", 0.08f) + (hit ? GameData.T("XpWeaponsHit", 0.04f) : 0f));
                 if (m.row.family == "Energy" || m.row.family == "Exotic")
                 {
                     // Lasers land instantly
@@ -334,7 +352,14 @@ namespace FBTS
 
         void Damage(Combatant c, WeaponRow w, float dmg)
         {
+            float before = c.hull;
             CombatRules.ApplyHit(c, w, dmg);
+            if (c.isPlayer)
+            {
+                // Hits that get through to the hull can injure the crew.
+                string hurt = Crew.InjureFromHit(S, before - c.hull);
+                if (hurt != null) { gm.Toast(hurt, 2.5f); injuries.Add(hurt); }
+            }
             c.hitFlash = 1f;
             if (c.hull > 0f || c.destroyed) return;
             c.destroyed = true;
@@ -418,6 +443,23 @@ namespace FBTS
             S.hullDamage = Mathf.Clamp(S.HullMax - me.hull, 0f, S.HullMax);
         }
 
+        /// <summary>The crew's side of the fight: injuries, and the Medical Officer's fight for the critically
+        /// wounded. Returns text for the result note (empty if nobody was hurt).</summary>
+        string CrewAftermath()
+        {
+            var lines = new List<string>(injuries);
+            lines.AddRange(Crew.ResolveCritical(S));
+            return lines.Count > 0 ? "\n\nCrew:\n" + string.Join("\n", lines) : "";
+        }
+
+        /// <summary>Show the result, unless the whole crew is gone.</summary>
+        void Report(string title, string body)
+        {
+            body += CrewAftermath();
+            if (Crew.AllLost(S)) { lost = true; gm.GameOver(body); return; }
+            gm.ShowNote(title, body);
+        }
+
         void Victory()
         {
             Finish();
@@ -461,7 +503,9 @@ namespace FBTS
                 }
             }
             sb.Append($"Hull {me.hull:0}/{me.hullMax:0}." + (me.hull < me.hullMax ? " Repairs are available at any starport." : ""));
-            gm.ShowNote(title, sb.ToString());
+            if (killed > 0 || routed) Crew.Morale(S, "FightWon");
+            if (killed > 0) Crew.Morale(S, "Salvage");
+            Report(title, sb.ToString());
             Leave();
         }
 
@@ -469,7 +513,7 @@ namespace FBTS
         {
             if (over) return;
             Finish();
-            gm.ShowNote("Ceasefire", $"The {enc.row.name} break off and leave.\nHull {me.hull:0}/{me.hullMax:0}.");
+            Report("Ceasefire", $"The {enc.row.name} break off and leave.\nHull {me.hull:0}/{me.hullMax:0}.");
             Leave();
         }
 
@@ -480,7 +524,8 @@ namespace FBTS
             float fuel = GameData.T("FleeFuel", 2f);
             S.fuel = Mathf.Max(0f, S.fuel - fuel);
             if (enc.row.race == "Varkesh" && !enc.provoked) S.AddRep("Varkesh", -2);  // fleeing a fair fight is shameful to them
-            gm.ShowNote("Escaped", $"You broke away at full burn, burning {fuel:0} fuel.\nHull {me.hull:0}/{me.hullMax:0}.");
+            Crew.Morale(S, "Fled");
+            Report("Escaped", $"You broke away at full burn, burning {fuel:0} fuel.\nHull {me.hull:0}/{me.hullMax:0}.");
             Leave();
         }
 
@@ -490,9 +535,11 @@ namespace FBTS
             Finish();
             S.fuel = Mathf.Max(0f, S.fuel - JumpFuel);
             if (enc.row.race == "Varkesh" && !enc.provoked) S.AddRep("Varkesh", -2);
-            gm.ShowNote("Emergency jump", $"The Navigator threw the ship across the system, burning {JumpFuel:0} fuel.\nHull {me.hull:0}/{me.hullMax:0}.");
+            Crew.Morale(S, "Fled");
+            Report("Emergency jump", $"The Navigator threw the ship across the system, burning {JumpFuel:0} fuel.\nHull {me.hull:0}/{me.hullMax:0}.");
             gm.FadeColor = Color.white;
             gm.FadeAlpha = 1f;
+            if (lost) return;
             Vector2 away = returnPos.sqrMagnitude > 0.01f ? -returnPos.normalized * Mathf.Max(6f, returnPos.magnitude) : Vector2.down * 6f;
             gm.Go(new SystemView(away));
             gm.FadeIn(0.8f);
@@ -516,13 +563,15 @@ namespace FBTS
             S.credits -= tow;
             S.cargo.Clear();
             S.hullDamage = S.HullMax * 0.75f;
-            S.day += days;
+            S.AdvanceDays(days);
             S.current = port;
             port.visited = true;
-            gm.ShowNote("Ship disabled",
+            Crew.Morale(S, "FightLost");
+            Report("Ship disabled",
                 $"Your ship was crippled and drifting. {days} days later an Orrun salvage tug hauled you into {port.name}.\n" +
                 $"Towing fee: {tow:N0} cr" + (S.credits < 0 ? " (you are now in debt)" : "") + ". Your cargo was \"recovered\" as salvage.\n" +
                 "Hull at 25%. Repair at the starport before your next fight.");
+            if (lost) return;
             gm.FadeColor = Color.black;
             gm.FadeAlpha = 1f;
             gm.Go(new SystemView(null));
@@ -531,6 +580,7 @@ namespace FBTS
 
         void Leave()
         {
+            if (lost) return;
             gm.FadeColor = Color.black;
             gm.FadeAlpha = 1f;
             gm.Go(new SystemView(returnPos));

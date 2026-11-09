@@ -1,0 +1,44 @@
+file,scenario_asset_id,model,status,format_note,description
+Assets/FlightBeyondTheStars/Resources/Portraits/factor-venn.png,asset_H7ii69URUCMnnqTcgU8aWJEz,GPT Image 2.5 Flare,AI placeholder,PNG,"Factor Bolo Venn, Orrun station master (concept A)"
+Assets/FlightBeyondTheStars/Resources/Portraits/clanmaster-ashquill.png,asset_uCvRY92cAC59CckEmJKBeV7o,GPT Image 2.5 Flare,AI placeholder,PNG,"Clanmaster Ruuk Ashquill, Varkesh leader (concept A)"
+Art/Concepts/venn_a.jpg,asset_H7ii69URUCMnnqTcgU8aWJEz,GPT Image 2.5 Flare,concept,JPG preview,Venn concept A (chosen)
+Art/Concepts/venn_b.jpg,asset_xxnXp7XBrNcXozz8HDoBXSid,GPT Image 2.5 Flare,concept,JPG preview,Venn concept B
+Art/Concepts/ashquill_a.jpg,asset_uCvRY92cAC59CckEmJKBeV7o,GPT Image 2.5 Flare,concept,JPG preview,Ashquill concept A (chosen)
+Art/Concepts/ashquill_b.jpg,asset_RaumMBZ2tSh7GWSxUgfJtHzx,GPT Image 2.5 Flare,concept,JPG preview,Ashquill concept B
+Assets/FlightBeyondTheStars/Resources/Art/Space/sun_surface.png,asset_Vd9KrgAPZgAPqhxi4RVprfAz,GPT Image 2.5 Flare,AI placeholder,PNG (made seamless; 512),Star surface plasma texture - animated by the FBTSSun shader
+Assets/FlightBeyondTheStars/Resources/Art/Space/planet_detail.png,asset_4e7pGa6F1Fy3gHQ4LodUAdR6,GPT Image 2.5 Flare,AI placeholder,PNG (greyscale detail from the rocky map),Painted detail mixed into every planet's terrain map
+Assets/FlightBeyondTheStars/Resources/Art/Ships/ship_player.png,asset_mZbkwUsct3BSZYNrbn77Erm9,GPT Image 2.5 Flare,AI placeholder,PNG transparent (trimmed; 512),Player light survey frigate hull (turrets separate)
+Assets/FlightBeyondTheStars/Resources/Art/Ships/turret.png,asset_Zh7LVaWEa2oRMhtxEeRa7Zjp,GPT Image 2.5 Flare,AI placeholder,PNG transparent (256),Ship turret (rotates toward target)
+Assets/FlightBeyondTheStars/Resources/Art/Ships/ship_orrun.png,asset_gwfq7sJL8KmuNxjtWD4Y4uPv,GPT Image 2.5 Flare,AI placeholder,PNG transparent (512),Orrun trader hull
+Assets/FlightBeyondTheStars/Resources/Art/Ships/ship_varkesh.png,asset_dnZEK7m39bd5RV86T6kS1YQR,GPT Image 2.5 Flare,AI placeholder,PNG transparent (512),Varkesh patrol hull
+Assets/FlightBeyondTheStars/Resources/Art/Ships/ship_skarrow.png,asset_ui8WcCDXUp2AoYw1wx2xU1jS,GPT Image 2.5 Flare,AI placeholder,PNG transparent (512),Skarrow scavenger hull
+Assets/FlightBeyondTheStars/Resources/Art/Ships/ship_drone.png,asset_Amrxz1XjgqAQX9RoYxnDQfn3,GPT Image 2.5 Flare,AI placeholder,PNG transparent (512),Mother's silent ship hull
+Assets/FlightBeyondTheStars/Resources/Art/Vehicles/rover_body.png,asset_fM58y2Y7B97do739MApaMCGr,GPT Image 2.5 Flare,AI placeholder,PNG transparent (512),Terrain vehicle body (treads scroll on top)
+Assets/FlightBeyondTheStars/Resources/Art/Vehicles/tread_strip.png,asset_nuzJY8JPFqxbDFL3mY5B9U7q,GPT Image 2.5 Flare,AI placeholder,PNG (made seamless; 96x256),Terrain vehicle tread strip
+Art/Source/*.png,(same ids as above),GPT Image 2.5 Flare,source,PNG full size,Untrimmed originals as generated (1024px)
+Assets/FlightBeyondTheStars/Resources/Art/Ground/ground_regolith.png,asset_eWquftjqLS8nKYjaRFhPc3yu,GPT Image 2.5 Flare,AI placeholder,"PNG greyscale detail (made seamless; 512)",Rocky-world land detail (greyscale; FBTSGround shader)
+Assets/FlightBeyondTheStars/Resources/Art/Ground/ground_bedrock.png,asset_HPxnRoQfLqEzyauLDbgejhvd,GPT Image 2.5 Flare,AI placeholder,"PNG greyscale detail (made seamless; 512)",Highland and mountain rock detail, all worlds
+Assets/FlightBeyondTheStars/Resources/Art/Ground/ground_snow.png,asset_L7PmSgW9frX1eRmvqYNPXx9Y,GPT Image 2.5 Flare,AI placeholder,"PNG greyscale detail (made seamless; 512)",Ice-world land and polar snow detail
+Assets/FlightBeyondTheStars/Resources/Art/Ground/ground_seaice.png,asset_CSGGAAr3NJ9sfZXoSA47rTiM,GPT Image 2.5 Flare,AI placeholder,"PNG greyscale detail (made seamless; 512)",Ice-world frozen sea detail
+Assets/FlightBeyondTheStars/Resources/Art/Ground/ground_moss.png,asset_Z3TNy9VQKqjuUCbqXSyWFpi3,GPT Image 2.5 Flare,AI placeholder,"PNG greyscale detail (made seamless; 512)",Ocean-world land (vegetation) detail
+Assets/FlightBeyondTheStars/Resources/Art/Ground/ground_basalt.png,asset_RbBFCX4y7rfH7mnGxHcyKqPv,GPT Image 2.5 Flare,AI placeholder,"PNG greyscale detail (made seamless; 512)",Molten-world land detail
+Assets/FlightBeyondTheStars/Resources/Art/Ground/ground_lava.png,asset_B8FKmhjHUvJCtUWf9LJTVwEA,GPT Image 2.5 Flare,AI placeholder,"PNG greyscale detail (made seamless; 512)",Lava sea detail (drifts and glows)
+Assets/FlightBeyondTheStars/Resources/Art/Ground/ground_water.png,asset_dDeFTXcRjntdBpkpkVc3v4k8,GPT Image 2.5 Flare,AI placeholder,"PNG greyscale detail (made seamless; 512)",Sea water detail (drifts)
+Assets/FlightBeyondTheStars/Resources/Art/Vehicles/lander.png,asset_2BqztZcWAdFNhuU1dnjuLDHG,GPT Image 2.5 Flare,AI placeholder,PNG transparent (trimmed; 512),Planetary lander (engine glow, pad lights and dust animated by LanderRig)
+Assets/FlightBeyondTheStars/Resources/Art/Surface/ore_common.png,asset_v2odNiXvPmp9vpSZwvDEdHEh,GPT Image 2.5 Flare,AI placeholder,PNG transparent (256),Mineral deposit, common (value < 20)
+Assets/FlightBeyondTheStars/Resources/Art/Surface/ore_valuable.png,asset_2dinwTNHQg46k88WQVWqEb7X,GPT Image 2.5 Flare,AI placeholder,PNG transparent (256),Mineral deposit, valuable (value 20-59)
+Assets/FlightBeyondTheStars/Resources/Art/Surface/ore_rare.png,asset_svR4kb7gei1ermwaHYJoR42K,GPT Image 2.5 Flare,AI placeholder,PNG transparent (256),Mineral deposit, rare (value 60+)
+Assets/FlightBeyondTheStars/Resources/Art/Surface/ruin.png,asset_Tyu9dapsN6xE7hwSeXaix38P,GPT Image 2.5 Flare,AI placeholder,PNG transparent (512),Alien ruin (greyed once searched)
+Assets/FlightBeyondTheStars/Resources/Art/Surface/life.png,asset_jMkEtCWLRZQneagXJ4bfk6Mp,GPT Image 2.5 Flare,AI placeholder,PNG transparent (256),Life form specimen
+Assets/FlightBeyondTheStars/Resources/Art/Surface/rock_0..5.png,asset_4WdZEYbrkvkJVrCzX7TcYcQv,GPT Image 2.5 Flare,AI placeholder,PNG transparent (split from one sheet; 256 each),Scatter boulders, tinted to the ground
+Assets/FlightBeyondTheStars/Resources/Art/Stations/station_humans.png,asset_QVBYdeSzHTK1eAQo7WR6n9MY,GPT Image 2.5 Flare,AI placeholder,PNG transparent (768),Human starport (player-ship style)
+Assets/FlightBeyondTheStars/Resources/Art/Stations/station_orrun.png,asset_raSDrzLJYEs5a9Z2gwUTf6NM,GPT Image 2.5 Flare,AI placeholder,PNG transparent (768),Orrun Combine trading station
+Assets/FlightBeyondTheStars/Resources/Art/Stations/station_varkesh.png,asset_ezKH8zKk4UriKvPUoBrwpaHL,GPT Image 2.5 Flare,AI placeholder,PNG transparent (768),Varkesh clan fortress (not placed in game yet)
+Assets/FlightBeyondTheStars/Resources/Art/Stations/station_skarrow.png,asset_x26GviMfMEkvUHQzyhV7RfF8,GPT Image 2.5 Flare,AI placeholder,PNG transparent (768),Skarrow scavenger outpost (not placed in game yet)
+Assets/FlightBeyondTheStars/Resources/Art/Settlements/settlement_humans.png,asset_CoiKzRzENfHKAcWx17Y4kyoM,GPT Image 2.5 Flare,AI placeholder,PNG transparent (trimmed; 768),"Human colony town (surface settlement on the race's home world)"
+Assets/FlightBeyondTheStars/Resources/Art/Settlements/settlement_orrun.png,asset_sKGWYATQk1SCBp8sBrj7nbGG,GPT Image 2.5 Flare,AI placeholder,PNG transparent (trimmed; 768),"Orrun market town (surface settlement on the race's home world)"
+Assets/FlightBeyondTheStars/Resources/Art/Settlements/settlement_noeti.png,asset_BKrVcVaDGhYesK4gKnh7QgJ2,GPT Image 2.5 Flare,AI placeholder,PNG transparent (trimmed; 768),"Noeti scholars' city (surface settlement on the race's home world)"
+Assets/FlightBeyondTheStars/Resources/Art/Settlements/settlement_varkesh.png,asset_B17wY9tqFy6yBGkXmdbZYb3M,GPT Image 2.5 Flare,AI placeholder,PNG transparent (trimmed; 768),"Varkesh clan hold (surface settlement on the race's home world)"
+Assets/FlightBeyondTheStars/Resources/Art/Settlements/settlement_murmur.png,asset_PdtPzQtz2CLe7LpwoAkdRfE5,GPT Image 2.5 Flare,AI placeholder,PNG transparent (trimmed; 768),"Murmur hive habitats (surface settlement on the race's home world)"
+Assets/FlightBeyondTheStars/Resources/Art/Settlements/settlement_ophane.png,asset_VRhRWipv2McsG9iRhUkF82mv,GPT Image 2.5 Flare,AI placeholder,PNG transparent (trimmed; 768),"Ophane observatory town (surface settlement on the race's home world)"
+Assets/FlightBeyondTheStars/Resources/Art/Settlements/settlement_thuum.png,asset_H1kV3UMiwtjEJJYY56Z5KRuZ,GPT Image 2.5 Flare,AI placeholder,PNG transparent (trimmed; 768),"Thuum forest settlement (surface settlement on the race's home world)"

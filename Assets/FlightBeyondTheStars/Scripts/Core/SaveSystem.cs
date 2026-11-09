@@ -11,11 +11,26 @@ namespace FBTS
     /// </summary>
     public static class SaveSystem
     {
-        public const int Version = 2;
+        public const int Version = 4;
         public const string QuickSlot = "quicksave";
         public const string AutoSlot = "autosave";
 
         [Serializable] class CargoEntry { public string commodity; public int amount; }
+        [Serializable] class ArtifactEntry { public string id; public bool identified, installed; public float study; }
+
+        [Serializable]
+        class CrewEntry
+        {
+            public string name, species, personality;
+            public bool captain, critical;
+            public float[] skills;
+            public float earned;
+            public float[] earnedByRole;
+            public int level, pendingTraits;
+            public string[] traits, traitChoices;
+            public float health, morale;
+            public string[] moraleLog;
+        }
 
         [Serializable]
         class PlanetEntry
@@ -39,7 +54,7 @@ namespace FBTS
             public string hull;
             public int currentSystem;
             public int terrainVehicleTier;
-            public int navigatorSkill, pilotSkill, scienceSkill, commsSkill;
+            public int navigatorSkill, pilotSkill, scienceSkill, commsSkill;   // version 1-2 only (now per crew member)
             public string[] upgrades;
             public string[] lore;
             public CargoEntry[] cargo;
@@ -57,10 +72,17 @@ namespace FBTS
             public int[] eventSystems;
             public string posture;
             // Combat (version 2 as well; missing in older saves means the defaults)
-            public int weaponsSkill;
+            public int weaponsSkill;   // version 2 only
+            // Version 3: crew (stations hold indexes into crew; -1 = empty)
+            public CrewEntry[] crew;
+            public int[] stations;
+            public int lastPortDay, lastShoreLeaveDay;
             public string[] weapons;
             public int shieldTier;
             public float hullDamage;
+            // Version 4: major artifacts carried, and every one ever found (each turns up once per game)
+            public ArtifactEntry[] artifacts;
+            public string[] artifactsFound;
         }
 
         public class SlotInfo
@@ -89,10 +111,6 @@ namespace FBTS
                     hull = s.hull != null ? s.hull.hullClass : null,
                     currentSystem = s.current.id,
                     terrainVehicleTier = s.terrainVehicleTier,
-                    navigatorSkill = s.navigatorSkill,
-                    pilotSkill = s.pilotSkill,
-                    scienceSkill = s.scienceSkill,
-                    commsSkill = s.commsSkill,
                     upgrades = new List<string>(s.upgrades).ToArray(),
                     lore = s.loreFound.ToArray()
                 };
@@ -109,10 +127,29 @@ namespace FBTS
                 d.inkStates = new string[d.inkRaces.Length];
                 for (int i = 0; i < d.inkRaces.Length; i++) d.inkStates[i] = s.inkStates[d.inkRaces[i]];
                 d.posture = s.posture;
-                d.weaponsSkill = s.weaponsSkill;
+                var crew = new List<CrewEntry>();
+                foreach (var m in s.crew)
+                    crew.Add(new CrewEntry
+                    {
+                        name = m.name, species = m.species, personality = m.personality,
+                        captain = m.captain, critical = m.critical,
+                        skills = (float[])m.skills.Clone(), earned = m.earned, earnedByRole = (float[])m.earnedByRole.Clone(),
+                        level = m.level, pendingTraits = m.pendingTraits,
+                        traits = m.traits.ToArray(), traitChoices = m.traitChoices,
+                        health = m.health, morale = m.morale, moraleLog = m.moraleLog.ToArray()
+                    });
+                d.crew = crew.ToArray();
+                d.stations = new int[s.stations.Length];
+                for (int i = 0; i < s.stations.Length; i++) d.stations[i] = s.stations[i] != null ? s.crew.IndexOf(s.stations[i]) : -1;
+                d.lastPortDay = s.lastPortDay;
+                d.lastShoreLeaveDay = s.lastShoreLeaveDay;
                 d.weapons = s.weapons.ToArray();
                 d.shieldTier = s.shieldTier;
                 d.hullDamage = s.hullDamage;
+                var arts = new List<ArtifactEntry>();
+                foreach (var a in s.artifacts) arts.Add(new ArtifactEntry { id = a.id, identified = a.identified, installed = a.installed, study = a.study });
+                d.artifacts = arts.ToArray();
+                d.artifactsFound = new List<string>(s.artifactsFound).ToArray();
                 d.eventIds = new List<string>(s.events.Keys).ToArray();
                 d.eventDays = new int[d.eventIds.Length];
                 d.eventSystems = new int[d.eventIds.Length];
@@ -170,10 +207,6 @@ namespace FBTS
                 s.credits = d.credits;
                 s.hull = GameData.Hull(d.hull);
                 s.terrainVehicleTier = Mathf.Clamp(d.terrainVehicleTier, 1, 5);
-                s.navigatorSkill = d.navigatorSkill;
-                s.pilotSkill = d.pilotSkill;
-                s.scienceSkill = d.scienceSkill;
-                s.commsSkill = d.commsSkill;
                 if (d.upgrades != null) foreach (var u in d.upgrades) s.upgrades.Add(u);
                 if (d.lore != null) s.loreFound.AddRange(d.lore);
                 if (d.cargo != null) foreach (var c in d.cargo) s.cargo[c.commodity] = c.amount;
@@ -185,10 +218,15 @@ namespace FBTS
                 if (d.inkRaces != null && d.inkStates != null)
                     for (int i = 0; i < Mathf.Min(d.inkRaces.Length, d.inkStates.Length); i++) s.inkStates[d.inkRaces[i]] = d.inkStates[i];
                 if (!string.IsNullOrEmpty(d.posture)) s.posture = d.posture;
-                if (d.weaponsSkill > 0) s.weaponsSkill = d.weaponsSkill;
+                LoadCrew(s, d);
                 if (d.weapons != null && d.weapons.Length > 0) { s.weapons.Clear(); s.weapons.AddRange(d.weapons); }
                 if (d.shieldTier > 0) s.shieldTier = Mathf.Clamp(d.shieldTier, 1, 5);
                 s.hullDamage = Mathf.Max(0f, d.hullDamage);
+                if (d.artifacts != null)
+                    foreach (var a in d.artifacts)
+                        if (GameData.Artifact(a.id) != null)
+                            s.artifacts.Add(new OwnedArtifact { id = a.id, identified = a.identified, installed = a.installed, study = a.study });
+                if (d.artifactsFound != null) foreach (var id in d.artifactsFound) s.artifactsFound.Add(id);
                 if (d.eventIds != null && d.eventDays != null && d.eventSystems != null)
                     for (int i = 0; i < d.eventIds.Length && i < d.eventDays.Length && i < d.eventSystems.Length; i++)
                         s.events[d.eventIds[i]] = new WorldEvent { day = d.eventDays[i], system = d.eventSystems[i] };
@@ -217,6 +255,50 @@ namespace FBTS
                 Debug.LogError("[FBTS] Load failed: " + e);
                 return null;
             }
+        }
+
+        static void LoadCrew(GameState s, SaveData d)
+        {
+            if (d.crew == null || d.crew.Length == 0)
+            {
+                // An older save: keep the new starting crew, but give them the skills that save had.
+                SetHolder(s, Roles.Navigator, d.navigatorSkill);
+                SetHolder(s, Roles.Pilot, d.pilotSkill);
+                SetHolder(s, Roles.Science, d.scienceSkill);
+                SetHolder(s, Roles.Comms, d.commsSkill);
+                SetHolder(s, Roles.Weapons, d.weaponsSkill);
+                return;
+            }
+            s.crew.Clear();
+            foreach (var e in d.crew)
+            {
+                var m = new CrewMember
+                {
+                    name = e.name, species = e.species, personality = e.personality,
+                    captain = e.captain, critical = e.critical,
+                    earned = e.earned, level = e.level, pendingTraits = e.pendingTraits,
+                    traitChoices = e.traitChoices != null && e.traitChoices.Length > 0 ? e.traitChoices : null,
+                    health = e.health, morale = e.morale
+                };
+                if (e.skills != null) for (int i = 0; i < Mathf.Min(e.skills.Length, m.skills.Length); i++) m.skills[i] = e.skills[i];
+                if (e.earnedByRole != null) for (int i = 0; i < Mathf.Min(e.earnedByRole.Length, m.earnedByRole.Length); i++) m.earnedByRole[i] = e.earnedByRole[i];
+                if (e.traits != null) m.traits.AddRange(e.traits);
+                if (e.moraleLog != null) m.moraleLog.AddRange(e.moraleLog);
+                s.crew.Add(m);
+            }
+            for (int i = 0; i < s.stations.Length; i++)
+            {
+                int idx = d.stations != null && i < d.stations.Length ? d.stations[i] : -1;
+                s.stations[i] = idx >= 0 && idx < s.crew.Count ? s.crew[idx] : null;
+            }
+            s.lastPortDay = d.lastPortDay;
+            s.lastShoreLeaveDay = d.lastShoreLeaveDay;
+        }
+
+        static void SetHolder(GameState s, int role, int skill)
+        {
+            var m = s.stations[role];
+            if (m != null && skill > 0) m.skills[role] = skill;
         }
 
         public static SlotInfo Info(string slot)

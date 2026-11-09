@@ -31,6 +31,22 @@
       "effect": "RevealRadius",
       "amount": 4,
       "description": "Adds to the rover's deposit-reveal distance on unscanned planets."
+    },
+    {
+      "id": "Galley",
+      "name": "Ship's Galley",
+      "cost": 7000,
+      "effect": "MoraleBaseline",
+      "amount": 10,
+      "description": "Real food. Crew morale settles at 70 instead of 60."
+    },
+    {
+      "id": "RecRoom",
+      "name": "Recreation Deck",
+      "cost": 9000,
+      "effect": "VoyageTolerance",
+      "amount": 30,
+      "description": "Long voyages wear on the crew only after 60 days from port instead of 30."
     }
   ]
 }

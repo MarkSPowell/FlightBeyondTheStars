@@ -51,6 +51,11 @@ namespace FBTS
         }
     }
 
+    [Serializable] public class PersonalityRow { public string personality; public string description; }
+    [Serializable] public class TraitRow { public string id, name, role, effect, description; public float amount; }
+    [Serializable] public class MoraleEventRow { public string @event; public string description; public float @base; }
+    [Serializable] public class PersonalityMoraleRow { public string personality; public string @event; public float multiplier; }
+
     [Serializable]
     public class WeaponRow
     {
@@ -95,6 +100,38 @@ namespace FBTS
         public static readonly string[] Names = { "Navigator", "Pilot", "Engineer", "Weapons Officer", "Science Officer", "Communications Officer", "Medical Officer", "Security Chief" };
     }
 
+    /// <summary>A unique major artifact (Artifacts tab). Kinds: Upgrade, Clue, Trade, Quest (any mix).</summary>
+    [Serializable]
+    public class ArtifactRow
+    {
+        public string id, name, kinds, effect;
+        public float amount, value;
+        public string racePrices;     // "Noeti:3; The Murmur:2" - price multiples for races that prize it
+        public float studyDays;
+        public string keyword;
+        public float weight = 1f;
+        public string description, clue;
+
+        public bool Is(string kind) => kinds != null && kinds.IndexOf(kind, StringComparison.OrdinalIgnoreCase) >= 0;
+
+        /// <summary>How much more than the listed value a race pays (1 if it has no special interest).</summary>
+        public float PriceFor(string race)
+        {
+            if (string.IsNullOrEmpty(racePrices) || race == null) return 1f;
+            foreach (var part in racePrices.Split(';'))
+            {
+                int c = part.LastIndexOf(':');
+                if (c <= 0) continue;
+                if (part.Substring(0, c).Trim() == race && float.TryParse(part.Substring(c + 1).Trim(),
+                        System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float m))
+                    return m;
+            }
+            return 1f;
+        }
+
+        public string KindsText => string.IsNullOrEmpty(kinds) ? "" : kinds;
+    }
+
     [Serializable] public class LoreRow { public string id; public string race; public string title; public string text; }
 
     /// <summary>A significant universe event (Events tab). Trigger: Stage, Player or Story. Spread: News or Broadcast.</summary>
@@ -127,11 +164,16 @@ namespace FBTS
         public static CrewRoleRow[] CrewRoles = new CrewRoleRow[0];
         public static DeadlineStageRow[] Deadline = new DeadlineStageRow[0];
         public static UpgradeRow[] Upgrades = new UpgradeRow[0];
+        public static ArtifactRow[] Artifacts = new ArtifactRow[0];
         public static WeaponRow[] Weapons = new WeaponRow[0];
         public static EncounterRow[] Encounters = new EncounterRow[0];
         public static LoreRow[] Lore = new LoreRow[0];
         public static EventRow[] Events = new EventRow[0];
         public static SpeciesRow[] Species = new SpeciesRow[0];
+        public static PersonalityRow[] Personalities = new PersonalityRow[0];
+        public static TraitRow[] Traits = new TraitRow[0];
+        public static MoraleEventRow[] MoraleEvents = new MoraleEventRow[0];
+        public static PersonalityMoraleRow[] PersonalityMorale = new PersonalityMoraleRow[0];
 
         public static bool Loaded { get; private set; }
 
@@ -150,8 +192,18 @@ namespace FBTS
             Weapons = LoadTable<WeaponRow>("Weapons");
             Encounters = LoadTable<EncounterRow>("Encounters");
             Lore = LoadTable<LoreRow>("Lore");
+            Artifacts = LoadTable<ArtifactRow>("Artifacts");
+            // Artifact clues become captain's log entries, listed after the ruin records
+            var lore = new List<LoreRow>(Lore);
+            foreach (var a in Artifacts)
+                if (!string.IsNullOrEmpty(a.clue)) lore.Add(new LoreRow { id = "artifact:" + a.id, race = "artifact", title = a.name, text = a.clue });
+            Lore = lore.ToArray();
             Events = LoadTable<EventRow>("Events");
             Species = LoadTable<SpeciesRow>("Species");
+            Personalities = LoadTable<PersonalityRow>("Personalities");
+            Traits = LoadTable<TraitRow>("Traits");
+            MoraleEvents = LoadTable<MoraleEventRow>("MoraleEvents");
+            PersonalityMorale = LoadTable<PersonalityMoraleRow>("PersonalityMorale");
             Loaded = true;
             Debug.Log($"[FBTS] Data loaded: {Commodities.Length} commodities, {Hulls.Length} hulls, {Tuning.Count} tuning levers.");
         }
@@ -207,6 +259,34 @@ namespace FBTS
             return (int)T("MaxSkill", 250f);
         }
 
+        public static TraitRow Trait(string id)
+        {
+            foreach (var t in Traits) if (t.id == id) return t;
+            return null;
+        }
+
+        public static MoraleEventRow MoraleEvent(string id)
+        {
+            foreach (var e in MoraleEvents) if (e.@event == id) return e;
+            return null;
+        }
+
+        /// <summary>How strongly a personality reacts to a morale event (1 = normal).</summary>
+        public static float MoraleMultiplier(string personality, string evt)
+        {
+            foreach (var m in PersonalityMorale) if (m.personality == personality && m.@event == evt) return m.multiplier;
+            return 1f;
+        }
+
+        public static PersonalityRow Personality(string name)
+        {
+            foreach (var p in Personalities) if (p.personality == name) return p;
+            return null;
+        }
+
+        /// <summary>Station index for a role name ("Weapons Officer" -> Roles.Weapons), or -1 ("Any").</summary>
+        public static int RoleIndex(string roleName) => Array.IndexOf(Roles.Names, roleName);
+
         public static LoreRow LoreEntry(string id)
         {
             foreach (var l in Lore) if (l.id == id) return l;
@@ -230,6 +310,12 @@ namespace FBTS
         public static EventRow Event(string id)
         {
             foreach (var e in Events) if (e.id == id) return e;
+            return null;
+        }
+
+        public static ArtifactRow Artifact(string id)
+        {
+            foreach (var a in Artifacts) if (a.id == id) return a;
             return null;
         }
 

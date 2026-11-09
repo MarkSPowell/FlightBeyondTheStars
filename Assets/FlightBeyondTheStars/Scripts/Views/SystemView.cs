@@ -14,6 +14,7 @@ namespace FBTS
         Planet near;
         bool nearStarport;
         bool docked;
+        public bool Docked => docked;
         float boundary;
         Vector2 scroll;
 
@@ -34,13 +35,12 @@ namespace FBTS
             sys.visited = true;
             Cam.orthographicSize = 10f;
 
-            Draw.Dot("Star", root, Vector2.zero, 3f, sys.color, 5);
-            Draw.Dot("Glow", root, Vector2.zero, 5f, new Color(sys.color.r, sys.color.g, sys.color.b, 0.15f), 4);
+            Art.Sun(root, Vector2.zero, 3f, sys.color);
 
             boundary = 8f;
             foreach (var p in sys.planets)
             {
-                Draw.Dot(p.name, root, p.Position, p.size, PlanetColor(p.type), 10);
+                Art.Planet(root, p, Vector2.zero, PlanetColor(p.type));
                 boundary = Mathf.Max(boundary, p.orbitRadius + 6f);
             }
 
@@ -48,11 +48,10 @@ namespace FBTS
             if (hasStarport)
             {
                 starportPos = sys.planets.Count > 0 ? sys.planets[0].Position + new Vector2(1.8f, 1.2f) : new Vector2(6f, 6f);
-                var sp = Draw.MakeSprite("Starport", root, Draw.Square, starportPos, new Vector2(0.9f, 0.9f), new Color(0.75f, 0.8f, 0.9f), 11);
-                sp.transform.localRotation = Quaternion.Euler(0, 0, 45);
+                Art.Station(sys.starportRace, root, starportPos, 1.7f);
             }
 
-            ship = Draw.Ship("Ship", root, new Color(0.4f, 0.9f, 1f), 0.6f);
+            ship = Art.Ship("player", "Ship", root, new Color(0.4f, 0.9f, 1f), 1.1f);
             ship.localPosition = spawn ?? new Vector2(0f, -4f);
             gm.Follow(ship.localPosition, 0f);
 
@@ -104,8 +103,8 @@ namespace FBTS
             int n = Mathf.Max(1, e.row.count);
             for (int i = 0; i < n; i++)
             {
-                var sh = Draw.Ship(e.row.name, e.marker, RaceColor(e.row.race), 0.5f);
-                sh.localPosition = new Vector2((i - (n - 1) / 2f) * 0.7f, -Mathf.Abs(i - (n - 1) / 2f) * 0.4f);
+                var sh = Art.Ship(Art.ShipKind(e.row.race), e.row.name, e.marker, RaceColor(e.row.race), 0.85f);
+                sh.localPosition = new Vector2((i - (n - 1) / 2f) * 1.0f, -Mathf.Abs(i - (n - 1) / 2f) * 0.6f);
             }
             e.marker.localPosition = e.pos;
             encTimer = 0f;
@@ -204,7 +203,7 @@ namespace FBTS
             var e = enc;
             gm.Hail(e.Race, "encounter", e.row.name, EncVars(true),
                 onAttack: () => e.hostile = true,
-                onStandDown: () => e.hostile = false,
+                onStandDown: () => { if (e.hostile) Crew.Morale(S, "TalkedDown"); e.hostile = false; },
                 onClose: () => AfterTalk(e));
         }
 
@@ -217,7 +216,7 @@ namespace FBTS
             var e = enc;
             gm.Hail(e.Race, "encounter", e.row.name, EncVars(false),
                 onAttack: () => e.hostile = true,
-                onStandDown: () => e.hostile = false,
+                onStandDown: () => { if (e.hostile) Crew.Morale(S, "TalkedDown"); e.hostile = false; },
                 onClose: () => AfterTalk(e));
         }
 
@@ -235,6 +234,7 @@ namespace FBTS
                 int pen = Mathf.RoundToInt(GameData.T("AttackRepPenalty", 10f));
                 S.AddRep(enc.row.race, -pen);
                 gm.Say($"You opened fire without provocation. The {enc.row.race} will remember (standing -{pen}).");
+                Crew.Morale(S, "Unprovoked");
             }
             enc.provoked = !enc.hostile;
             enc.hostile = true;
@@ -367,7 +367,12 @@ namespace FBTS
                     ship.localPosition = end;
                     ship.localRotation = Quaternion.Euler(0, 0, 90);
                     docked = true;
+                    var gone = Crew.ArriveAtPort(S);
                     gm.Say($"Docked at {S.current.name} starport ({S.current.starportRace} market).");
+                    if (gone.Count > 0)
+                        gm.ShowNote("Crew left the ship", string.Join(", ", gone) +
+                            (gone.Count == 1 ? " has" : " have") + " had enough and walked off at the dock. Morale had fallen too low.\n\n" +
+                            "Hire replacements or reassign stations on the Crew screen (C).");
                     gm.AutoSave();
                 }
             });
@@ -434,6 +439,7 @@ namespace FBTS
                 {
                     p.scanned = true;
                     S.AddCargo("Survey record (per planet)", 1);
+                    Crew.Gain(S, Roles.Science, GameData.T("XpScan", 2f));
                     gm.Say($"Scan of {p.name} complete: {p.type}, {p.gravity:0.0} g. Survey record added to cargo.");
                 }
             });
@@ -545,7 +551,51 @@ namespace FBTS
             }
             GUILayout.Space(6);
 
+            int tab = GUILayout.Toolbar(portTab, PortTabs, GUILayout.Height(28));
+            if (tab != portTab) { portTab = tab; scroll = Vector2.zero; }
+            GUILayout.Space(4);
             scroll = GUILayout.BeginScrollView(scroll);
+            if (portTab == 0) MarketGui(sys);
+            else if (portTab == 1) ShipyardTabGui(sys);
+            else CrewTabGui(sys);
+            GUILayout.EndScrollView();
+
+            if (gm.Button("Undock")) Undock();
+        }
+
+        static readonly string[] PortTabs = { "Market", "Shipyard", "Crew" };
+        static int portTab;   // remembered between visits
+
+        void ShipyardTabGui(StarSystem sys)
+        {
+            RepairGui();
+            WeaponsGui();
+            ShieldsGui();
+            ModulesGui();
+            RoverGui();
+            if (sys.starportRace == "Humans") ShipyardGui();
+            else
+            {
+                GUILayout.Space(10);
+                GUILayout.Label("New hulls are sold only at Haven's shipyard.", gm.Hint);
+            }
+        }
+
+        void CrewTabGui(StarSystem sys)
+        {
+            if (gm.Button("Open the crew screen (C)")) gm.ShowCrew();
+            ShoreLeaveGui();
+            if (sys.starportRace == "Humans") HiringGui();
+            else
+            {
+                GUILayout.Space(10);
+                GUILayout.Label("Recruits for hire are found at Haven.", gm.Hint);
+            }
+            TrainingGui();
+        }
+
+        void MarketGui(StarSystem sys)
+        {
             GUILayout.Label("Sell cargo", gm.Header);
             if (S.cargo.Count == 0) GUILayout.Label("Cargo hold is empty.", gm.Label);
             foreach (var kv in new List<KeyValuePair<string, int>>(S.cargo))
@@ -559,6 +609,7 @@ namespace FBTS
                 GUILayout.EndHorizontal();
                 if (!buys) GUILayout.Label("This market won't buy it.", gm.Hint);
             }
+            Market.ArtifactsGui(gm, S, sys.starportRace, 1f);
 
             GUILayout.Space(10);
             GUILayout.Label("Fuel", gm.Header);
@@ -570,43 +621,40 @@ namespace FBTS
             if (gm.Button("Buy 1", affordable >= 1)) BuyFuel(1, fuelPrice);
             if (gm.Button($"Fill ({affordable})", affordable >= 1)) BuyFuel(affordable, fuelPrice);
             GUILayout.EndHorizontal();
-
-            RepairGui();
-            TrainingGui();
-            WeaponsGui();
-            ShieldsGui();
-            ModulesGui();
-            RoverGui();
-            if (sys.starportRace == "Humans") ShipyardGui();
-            GUILayout.EndScrollView();
-
-            if (gm.Button("Undock")) Undock();
         }
 
         // ---------------------------------------------------------------- Shop
 
-        /// <summary>Starport training for the four bridge skills used so far. Crew are all human until
-        /// recruitment arrives, so human skill caps apply; the best specialists will come from other species.</summary>
+        /// <summary>Starport training: each crew member can train in the station(s) they hold, up to their
+        /// species' cap. Training raises skill but doesn't count toward levels (only experience does).</summary>
         void TrainingGui()
         {
             GUILayout.Space(10);
             GUILayout.Label("Crew training", gm.Header);
             int points = Mathf.RoundToInt(GameData.T("TrainPointsPerSession", 10f));
-            TrainRow("Science Officer", Roles.Science, () => S.scienceSkill, v => S.scienceSkill = v, points);
-            TrainRow("Navigator", Roles.Navigator, () => S.navigatorSkill, v => S.navigatorSkill = v, points);
-            TrainRow("Pilot", Roles.Pilot, () => S.pilotSkill, v => S.pilotSkill = v, points);
-            TrainRow("Communications Officer", Roles.Comms, () => S.commsSkill, v => S.commsSkill = v, points);
-            TrainRow("Weapons Officer", Roles.Weapons, () => S.weaponsSkill, v => S.weaponsSkill = v, points);
+            bool any = false;
+            foreach (var m in S.crew)
+            {
+                if (!m.Fit) continue;
+                for (int role = 0; role < S.stations.Length; role++)
+                {
+                    if (S.stations[role] != m) continue;
+                    any = true;
+                    TrainRow(m, role, points);
+                }
+            }
+            if (!any) GUILayout.Label("Nobody is assigned to a station.", gm.Hint);
         }
 
-        void TrainRow(string label, int role, System.Func<int> get, System.Action<int> set, int points)
+        void TrainRow(CrewMember m, int role, int points)
         {
-            int cap = GameData.SkillCap("Humans", role);
-            int from = get();
+            int cap = m.Cap(role);
+            int from = m.Skill(role);
             int to = Mathf.Min(cap, from + points);
+            string label = $"{m.name}, {Roles.Names[role]}";
             if (to <= from)
             {
-                GUILayout.Label($"{label}: {from} (human maximum).", gm.Label);
+                GUILayout.Label($"{label}: {from} ({m.species} maximum).", gm.Label);
                 return;
             }
             float tb = GameData.T("TrainBase", 20f), ts = GameData.T("TrainScale", 100f);
@@ -616,10 +664,54 @@ namespace FBTS
             if (gm.Button($"Train to {to} ({cost:N0} cr, {days} days)", S.credits >= cost))
             {
                 S.credits -= cost;
-                S.day += days;
-                set(to);
-                gm.Say($"{label} trained to {to}.");
+                S.AdvanceDays(days);
+                m.skills[role] = to;
+                gm.Say($"{m.name} trained to {to} as {Roles.Names[role]}.");
             }
+        }
+
+        /// <summary>A day ashore lifts morale (once a week).</summary>
+        void ShoreLeaveGui()
+        {
+            GUILayout.Space(10);
+            GUILayout.Label("Shore leave", gm.Header);
+            int wait = 7 - (S.day - S.lastShoreLeaveDay);
+            if (wait > 0) { GUILayout.Label($"The crew had leave recently. Available again in {wait} days.", gm.Hint); return; }
+            if (gm.Button("Give the crew a day's shore leave (+morale)"))
+            {
+                S.AdvanceDays(1);
+                S.lastShoreLeaveDay = S.day;
+                Crew.Morale(S, "ShoreLeave");
+                gm.Say("The crew enjoyed a day on the station. Morale is up.");
+            }
+        }
+
+        /// <summary>Haven's hiring hall: three human recruits each week.</summary>
+        void HiringGui()
+        {
+            GUILayout.Space(10);
+            int berths = S.hull != null ? Mathf.RoundToInt(S.hull.crewBerths) : 6;
+            int alive = S.crew.FindAll(c => !c.dead).Count;
+            GUILayout.Label($"Hiring hall ({alive} / {berths} berths)", gm.Header);
+            var rng = new System.Random(S.seed * 7 + S.day / 7 * 31 + 3);
+            for (int i = 0; i < 3; i++)
+            {
+                var r = Crew.Recruit(S, rng, "Humans", rng.Next(Roles.Names.Length), 45, 85);
+                int main = 0;
+                for (int k = 1; k < r.skills.Length; k++) if (r.skills[k] > r.skills[main]) main = k;
+                if (S.crew.Exists(c => c.name == r.name)) continue;
+                float cost = Crew.HireCost(r);
+                GUILayout.Label($"{r.name}: {Roles.Names[main]} {r.Skill(main)}, {r.personality}", gm.Label);
+                if (gm.Button($"Hire ({cost:N0} cr)", alive < berths && S.credits >= cost))
+                {
+                    S.credits -= cost;
+                    S.crew.Add(r);
+                    if (S.stations[main] == null) S.stations[main] = r;
+                    gm.Say($"{r.name} joins the crew" + (S.stations[main] == r ? $" as {Roles.Names[main]}." : ". Assign a station on the Crew screen (C)."));
+                }
+            }
+            if (alive >= berths) GUILayout.Label("No free berths. A bigger hull holds more crew.", gm.Hint);
+            GUILayout.Label("New recruits arrive every week.", gm.Hint);
         }
 
         void RepairGui()
@@ -627,7 +719,7 @@ namespace FBTS
             if (S.hullDamage <= 0.5f) return;
             GUILayout.Space(10);
             GUILayout.Label("Repairs", gm.Header);
-            float per = GameData.T("RepairCostPerPoint", 12f);
+            float per = GameData.T("RepairCostPerPoint", 12f) * (1f - S.Trait("RepairCost"));
             float full = Mathf.Ceil(S.hullDamage) * per;
             GUILayout.Label($"Hull {S.Hull:0} / {S.HullMax:0}. Full repair {full:N0} cr.", gm.Label);
             int affordable = Mathf.FloorToInt(Mathf.Min(S.hullDamage, Mathf.Max(0f, S.credits) / per));
@@ -780,11 +872,7 @@ namespace FBTS
         void Sell(string commodity, int qty, float price)
         {
             S.RemoveCargo(commodity, qty);
-            S.credits += qty * price;
-            // Good business earns goodwill: +1 standing per RepSaleValue credits in one sale.
-            int goodwill = Mathf.FloorToInt(qty * price / Mathf.Max(1f, GameData.T("RepSaleValue", 1000f)));
-            if (goodwill > 0) S.AddRep(S.current.starportRace, goodwill);
-            gm.Say($"Sold {qty} {commodity} for {qty * price:N0} cr." + (goodwill > 0 ? $" Standing +{goodwill}." : ""));
+            Market.Sold(gm, S, S.current.starportRace, $"{qty} {commodity}", qty * price);
         }
 
         void BuyFuel(int units, float price)

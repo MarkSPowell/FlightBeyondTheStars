@@ -149,6 +149,23 @@ namespace FBTS
             return Color.Lerp(c, new Color(0.93f, 0.96f, 1f), polar * 0.8f);
         }
 
+        /// <summary>What the ground is made of, for the painted-ground shader: R = sea, G = rock (rising through
+        /// the highlands to full on mountains), B = polar snow, A = hill shading (0.5 = flat).</summary>
+        public Color GroundMask(float x, float y)
+        {
+            float e = Elevation(x, y);
+            float sea = e < seaLevel ? 1f : 0f;
+            float rock = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(HighlandLevel - 0.04f, MountainLevel + 0.04f, e));
+            float polar = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(50f, 70f, Mathf.Abs(Latitude(y))));
+            if (planet.type == PlanetType.Ice) polar = 0f;   // the whole world is snow already
+            // Hill shading, lit from the upper left: worked out here per km and blended smoothly on screen
+            // (a slope taken in the shader from blended heights would show up as squares).
+            float ex = Elevation(x + 1f, y) - Elevation(x - 1f, y);
+            float ey = Elevation(x, y + 1f) - Elevation(x, y - 1f);
+            float shade = sea > 0f ? 0.5f : Mathf.Clamp01(0.5f + (-ex + ey) * 1.6f);
+            return new Color(sea, rock, polar * 0.9f, shade);
+        }
+
         /// <summary>Orbital map colour: hypsometric tints with contour lines every elevation band.</summary>
         public Color TopoColor(float x, float y, float stepX, float stepY)
         {

@@ -1,5 +1,5 @@
 // Flight Beyond the Stars - Varkesh dialogue
-// Entry points (chosen by the game): homeworld
+// Entry points (chosen by the game): homeworld, settlement, encounter
 //
 // The Varkesh are the opposite of the Orrun: they respect strength and plain speech, and they read
 // flattery as cowardice or a hidden knife. Hostile posture earns respect (within reason); obsequious
@@ -19,6 +19,9 @@ EXTERNAL heard(id)
 EXTERNAL days_since(id)
 EXTERNAL attack()
 EXTERNAL stand_down()
+EXTERNAL crew_reacts(event)
+EXTERNAL has_artifact(id)
+EXTERNAL give_artifact(id)
 
 VAR posture = "friendly"
 VAR comms = 60
@@ -96,6 +99,7 @@ Clanmaster Ashquill: I am Ruuk Ashquill, Clanmaster of the Ashquill clan and kee
 + { knows("houses") || knows("varkesh") } [What do you think of the Orrun?] -> orrun
 + { knows("varkesh-3") && not the_blade } [We found a Varkesh blade made for a human hand.] -> the_blade
 + { the_blade } [Tell me more about the humans who stood with you.] -> the_watch
++ { has_artifact("first_watch_sigil") && not the_sigil } [Show her the Sigil of the First Watch.] -> the_sigil
 + [Any news?] -> recap
 + [We're done here.] -> goodbye
 
@@ -150,6 +154,29 @@ Clanmaster Ashquill: Then one day they were gone, and we kept the Oath alone. We
 Clanmaster Ashquill: The songs say little. They were few. They were tired, as if they had already fought this war somewhere else and lost.
 Clanmaster Ashquill: If you want more, ask the Orrun. They were here before the clans had names, and they write down everything they are paid to forget.
 -> topics
+
+= the_sigil
+You hold the black sigil up to the screen. Every Varkesh in the hall behind Ashquill stops moving.
+Clanmaster Ashquill: Where did you find that?
+Clanmaster Ashquill: (very quietly) "We stand the watch together, until the silent ships come." Those are the last words of the Oath. Only the clanmasters are taught them.
+{ not the_blade:
+    Clanmaster Ashquill: The first stone in this hall bears a human handprint, stranger. Your kind stood with us, once. Then they were gone.
+    ~ learn("first-watch")
+}
+Clanmaster Ashquill: That sigil belongs on the first stone. I will not take it from you. I will ask for it.
++ [It belongs on your stone. Take it.]
+    { give_artifact("first_watch_sigil"):
+        The Clanmaster takes the sigil in both hands and bows her crest, something you have never seen a Varkesh do.
+        Clanmaster Ashquill: Then the watch is stood again. Your name will be cut beside the handprint, Captain. Every clan ship will know it.
+        ~ shift(25)
+        ~ learn("oath-kin")
+        ~ crew_reacts("Mercy")
+    }
+    -> topics
++ [I need to keep it, for now.]
+    Clanmaster Ashquill: Then keep it well. A thing like that does not stay lost twice.
+    ~ shift(2)
+    -> topics
 
 // ------------------------------------------------------------------ the trial of nerve
 
@@ -360,6 +387,11 @@ Wing-leader Korr: Your name is cut on no stone of ours, and the clans speak poor
     Wing-leader Korr: Good. At least you are not a coward.
     ~ shift(2)
     ~ attack()
++ { knows("oath-kin") } [Read the stones of the Ashquill hall. My name is cut beside the handprint.]
+    The pilot checks something off-screen. His quills drop flat.
+    Wing-leader Korr: ...It is. Forgive the challenge, oath-kin. Fly where you like.
+    ~ shift(3)
+    ~ stand_down()
 + { not fawning() } [We mean no harm. We're leaving.]
     Wing-leader Korr: Then leave. Do not come back without a reason.
     ~ stand_down()
@@ -394,6 +426,7 @@ Wing-leader Korr: You hail me in the middle of a fight? Speak quickly.
 + [We yield.]
     Wing-leader Korr: Yielding is honest. Fleeing is not. Go, and remember who let you live.
     ~ shift(-3)
+    ~ crew_reacts("Fled")
     ~ stand_down()
 + [Let's call this a draw.]
     { odds >= 120:
@@ -406,3 +439,64 @@ Wing-leader Korr: You hail me in the middle of a fight? Speak quickly.
 + [Nothing. Weapons free.]
     Wing-leader Korr: Ha!
 - -> END
+
+// ------------------------------------------------------------------ a clan hold on Kesh
+// Unnamed locals, met by driving the rover up to a hold. Trading is done on the game's market screen.
+
+=== settlement ===
+{ reputation <= -30:
+    A warrior on the wall levels a long gun at your rover and says nothing at all. The gate stays shut.
+    -> END
+}
+{ settlement == 1:
+    The outer yard of a clan hold: black stone walls, a forge roaring in one corner, children sparring with blunt blades. A broad-shouldered warden with a scarred crest strides out to meet your rover.
+    Hold-warden: A human, driving up to our gate in a little cart. The children will talk about this for a year. State your business.
+- else:
+    { knows("oath-kin"):
+        Hold-warden: Oath-kin! Come in, come in. The forge is hot and the stew is worse. Both are yours.
+    - else:
+        Hold-warden: The human in the little cart, again. Speak.
+    }
+}
+{
+- bold():
+    Hold-warden: Ha! You stare a warden down from a cart. Good.
+    ~ shift(1)
+- fawning():
+    Hold-warden: Stop bowing. You look like a bird drinking.
+    ~ shift(-2)
+}
+-> hold_talk
+
+= hold_talk
++ [What news in the hold?] -> hold_mood
++ [Do you trade?] -> hold_trade
++ { has_artifact("first_watch_sigil") && not hold_sigil } [Show the warden the black sigil.] -> hold_sigil
++ [Farewell.] -> hold_bye
+
+= hold_mood
+{
+- heard("stage-3"):
+    Hold-warden: The clan ships go out and fewer come back. The silent ships are real, human. The Oath was not a story.
+- heard("first-anchor"):
+    Hold-warden: The Clanmaster has called the far holds home. Something at the rim cuts the lanes, and the old ones are sharpening blades they have not touched in a hundred years.
+- heard("stage-2"):
+    Hold-warden: Talk of failing lanes. The young ones want to fly out and fight the dark. The old ones say wait. The old ones are usually right, and always annoying.
+- else:
+    Hold-warden: Quiet. Good forging weather. The trial stones are booked for a month.
+}
+-> hold_talk
+
+= hold_trade
+Hold-warden: We trade. We do not haggle. Name a fair price, take a fair price. The Orrun think this makes us easy marks. The Orrun are welcome to try it in person.
+Hold-warden: Weapons and good steel we always want. Old relics of war, bring to the Clanmaster, not to me.
+-> hold_talk
+
+= hold_sigil
+The warden looks at the sigil, then drops to one knee in the dust of the yard. The sparring children stop.
+Hold-warden: That is the watch's mark. That belongs on the Clanmaster's first stone, human. Take it to her. Do not sell it. Do not even think about selling it.
+-> hold_talk
+
+= hold_bye
+Hold-warden: Go well. Mind the cliffs; your cart looks breakable.
+-> END

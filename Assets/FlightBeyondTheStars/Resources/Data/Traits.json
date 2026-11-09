@@ -1,0 +1,188 @@
+{
+  "items": [
+    {
+      "id": "sharpshooter",
+      "name": "Sharpshooter",
+      "role": "Weapons Officer",
+      "effect": "HitChance",
+      "amount": 0.08,
+      "description": "+8% hit chance."
+    },
+    {
+      "id": "gunnery-drills",
+      "name": "Gunnery Drills",
+      "role": "Weapons Officer",
+      "effect": "FireRate",
+      "amount": 0.15,
+      "description": "Weapons reload 15% faster."
+    },
+    {
+      "id": "heavy-hitter",
+      "name": "Heavy Hitter",
+      "role": "Weapons Officer",
+      "effect": "Damage",
+      "amount": 0.1,
+      "description": "+10% weapon damage."
+    },
+    {
+      "id": "evasive",
+      "name": "Evasive Flyer",
+      "role": "Pilot",
+      "effect": "Evasion",
+      "amount": 0.06,
+      "description": "Enemies have 6% less chance to hit."
+    },
+    {
+      "id": "ace",
+      "name": "Ace Pilot",
+      "role": "Pilot",
+      "effect": "CombatSpeed",
+      "amount": 0.15,
+      "description": "+15% speed in combat."
+    },
+    {
+      "id": "soft-touch",
+      "name": "Soft Touch",
+      "role": "Pilot",
+      "effect": "LandingFuel",
+      "amount": 0.25,
+      "description": "Landings use 25% less fuel."
+    },
+    {
+      "id": "pathfinder",
+      "name": "Pathfinder",
+      "role": "Navigator",
+      "effect": "JumpFuel",
+      "amount": 0.1,
+      "description": "Jumps use 10% less fuel."
+    },
+    {
+      "id": "shortcut",
+      "name": "Lane Runner",
+      "role": "Navigator",
+      "effect": "TravelSpeed",
+      "amount": 0.15,
+      "description": "Trips take 15% less time."
+    },
+    {
+      "id": "hyperspace-veteran",
+      "name": "Hyperspace Veteran",
+      "role": "Navigator",
+      "effect": "EmergencyJump",
+      "amount": 0.3,
+      "description": "Emergency jumps spool 30% faster."
+    },
+    {
+      "id": "geologist",
+      "name": "Geologist",
+      "role": "Science Officer",
+      "effect": "MineralYield",
+      "amount": 0.25,
+      "description": "+25% minerals from each deposit."
+    },
+    {
+      "id": "xenobiologist",
+      "name": "Xenobiologist",
+      "role": "Science Officer",
+      "effect": "LifeYield",
+      "amount": 0.5,
+      "description": "+50% specimens from each life form."
+    },
+    {
+      "id": "archaeologist",
+      "name": "Archaeologist",
+      "role": "Science Officer",
+      "effect": "RuinRadius",
+      "amount": 0.35,
+      "description": "Ruin search areas are 35% smaller."
+    },
+    {
+      "id": "keen-sensors",
+      "name": "Keen Sensors",
+      "role": "Science Officer",
+      "effect": "ScanSkill",
+      "amount": 25,
+      "description": "Counts as +25 Science skill when reading planets from orbit."
+    },
+    {
+      "id": "smooth-talker",
+      "name": "Smooth Talker",
+      "role": "Communications Officer",
+      "effect": "Prices",
+      "amount": 0.05,
+      "description": "5% better prices at every market."
+    },
+    {
+      "id": "linguist",
+      "name": "Linguist",
+      "role": "Communications Officer",
+      "effect": "DialogueSkill",
+      "amount": 25,
+      "description": "Counts as +25 Comms skill in conversations."
+    },
+    {
+      "id": "shield-tuner",
+      "name": "Shield Tuner",
+      "role": "Engineer",
+      "effect": "ShieldRecharge",
+      "amount": 0.25,
+      "description": "Shields recharge 25% faster."
+    },
+    {
+      "id": "field-repairs",
+      "name": "Field Repairs",
+      "role": "Engineer",
+      "effect": "RepairCost",
+      "amount": 0.25,
+      "description": "Starport hull repairs cost 25% less."
+    },
+    {
+      "id": "field-medic",
+      "name": "Field Medic",
+      "role": "Medical Officer",
+      "effect": "SaveChance",
+      "amount": 0.15,
+      "description": "+15% chance to save a critically wounded crewmate."
+    },
+    {
+      "id": "quick-healer",
+      "name": "Quick Healer",
+      "role": "Medical Officer",
+      "effect": "Recovery",
+      "amount": 0.5,
+      "description": "Injured crew heal 50% faster."
+    },
+    {
+      "id": "iron-nerves",
+      "name": "Iron Nerves",
+      "role": "Any",
+      "effect": "MoraleLoss",
+      "amount": 0.5,
+      "description": "Morale losses are halved for this crew member."
+    },
+    {
+      "id": "tough",
+      "name": "Tough",
+      "role": "Any",
+      "effect": "InjuryChance",
+      "amount": 0.4,
+      "description": "40% less likely to be injured."
+    },
+    {
+      "id": "quick-learner",
+      "name": "Quick Learner",
+      "role": "Any",
+      "effect": "XpGain",
+      "amount": 0.25,
+      "description": "Learns 25% faster from experience."
+    },
+    {
+      "id": "antiquarian",
+      "name": "Antiquarian",
+      "role": "Science Officer",
+      "effect": "ArtifactStudy",
+      "amount": 0.5,
+      "description": "Studies artifacts 50% faster."
+    }
+  ]
+}

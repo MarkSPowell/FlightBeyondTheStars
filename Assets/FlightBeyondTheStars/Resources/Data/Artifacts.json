@@ -1,0 +1,143 @@
+{
+  "items": [
+    {
+      "id": "lattice_shard",
+      "name": "Warp Lattice Shard",
+      "kinds": "Upgrade, Clue",
+      "effect": "JumpFuel",
+      "amount": 0.12,
+      "value": 4000,
+      "racePrices": "Noeti:3; The Murmur:2",
+      "studyDays": 12,
+      "keyword": "warp-lattice",
+      "weight": 3,
+      "description": "A finger-length splinter of crystal threaded with frozen light. Mounted beside the drive, it steadies every jump and cuts fuel use.",
+      "clue": "The shard is a piece of a warp-route relay, but not one built in this galaxy. Its lattice stores coordinates for routes that exist nowhere on any chart here, and a maker's cipher no living race uses."
+    },
+    {
+      "id": "route_resonator",
+      "name": "Route Resonator",
+      "kinds": "Upgrade, Clue",
+      "effect": "TravelSpeed",
+      "amount": 0.15,
+      "value": 4500,
+      "racePrices": "Noeti:3",
+      "studyDays": 14,
+      "keyword": "route-hum",
+      "weight": 3,
+      "description": "A heavy bronze-coloured cylinder that hums when powered. Tied into the navigation computer, it lets the ship ride routes faster.",
+      "clue": "Powered, the resonator sings a carrier tone. The Science Officer finds the same tone, much louder, in the static around every route that has failed."
+    },
+    {
+      "id": "seer_lens",
+      "name": "Seer's Lens",
+      "kinds": "Upgrade",
+      "effect": "ScanSkill",
+      "amount": 25,
+      "value": 3500,
+      "racePrices": "Noeti:2.5; Ophane:2",
+      "studyDays": 8,
+      "weight": 4,
+      "description": "A palm-sized lens that bends light the wrong way. Fitted to the sensor array, it sharpens every planetary scan."
+    },
+    {
+      "id": "living_alloy",
+      "name": "Living Alloy Plate",
+      "kinds": "Upgrade",
+      "effect": "Armor",
+      "amount": 2,
+      "value": 3000,
+      "racePrices": "Varkesh:2.5; Thuum:1.5",
+      "studyDays": 8,
+      "weight": 4,
+      "description": "A plate of dull grey metal that slowly closes scratches on its own. Bonded to the hull, it hardens the armour."
+    },
+    {
+      "id": "shield_harmonic",
+      "name": "Harmonic Shield Core",
+      "kinds": "Upgrade",
+      "effect": "ShieldCapacity",
+      "amount": 0.25,
+      "value": 4000,
+      "racePrices": "Varkesh:2; Thuum:2",
+      "studyDays": 10,
+      "weight": 3,
+      "description": "A lattice of rings that spin inside each other without touching. Wired into the shield generator, it holds a far stronger field."
+    },
+    {
+      "id": "folded_hold",
+      "name": "Folded Hold",
+      "kinds": "Upgrade",
+      "effect": "Cargo",
+      "amount": 20,
+      "value": 3000,
+      "racePrices": "Orrun Combine:2.5",
+      "studyDays": 8,
+      "weight": 4,
+      "description": "A sealed box that is plainly larger inside than out. Built into the hold, it adds cargo space."
+    },
+    {
+      "id": "void_chart",
+      "name": "Void Chart",
+      "kinds": "Clue, Trade",
+      "amount": 0,
+      "value": 6000,
+      "racePrices": "Noeti:3",
+      "studyDays": 18,
+      "keyword": "void-chart",
+      "weight": 2,
+      "description": "A star chart etched on a thin metal sheet, every route of the region marked, and one more.",
+      "clue": "The last route on the chart leaves the galaxy altogether and runs out into the empty dark between galaxies. Where it ends, one word is engraved in the oldest form of human script: home."
+    },
+    {
+      "id": "cradle_beacon",
+      "name": "Exodus Cradle Beacon",
+      "kinds": "Clue, Trade",
+      "amount": 0,
+      "value": 5000,
+      "racePrices": "Noeti:2.5; Humans:1.5",
+      "studyDays": 16,
+      "keyword": "exodus",
+      "weight": 2,
+      "description": "A dented emergency beacon, still faintly transmitting on a frequency nobody has used in living memory.",
+      "clue": "Decoded, the beacon repeats a ship's manifest: \"Cradle Four of Nine. Sleepers aboard: 41,200. Bearing: away.\" The language is an ancestor of human speech. The date counts from a calendar that begins somewhere else."
+    },
+    {
+      "id": "memory_crystal",
+      "name": "Child's Memory Crystal",
+      "kinds": "Clue",
+      "amount": 0,
+      "value": 2500,
+      "racePrices": "Noeti:2",
+      "studyDays": 10,
+      "keyword": "burial",
+      "weight": 3,
+      "description": "A smooth crystal bead on a cord, the kind given to children. It holds a recorded lesson.",
+      "clue": "A gentle voice teaches a child: \"We have always been here. There is nowhere else.\" Beneath it, half erased, an older recording of the same voice: \"Never speak of the long dark, or of what we left behind.\""
+    },
+    {
+      "id": "first_watch_sigil",
+      "name": "Sigil of the First Watch",
+      "kinds": "Quest, Clue",
+      "amount": 0,
+      "value": 3000,
+      "racePrices": "Varkesh:3",
+      "studyDays": 10,
+      "keyword": "first-watch-sigil",
+      "weight": 2,
+      "description": "A heavy badge of black metal shaped like a crest of quills, sized for a human hand.",
+      "clue": "The sigil is engraved in Varkesh oath script, but the maker's mark on the back is human. Its words read: \"We stand the watch together, until the silent ships come.\""
+    },
+    {
+      "id": "founding_seal",
+      "name": "Founding Ledger Seal",
+      "kinds": "Quest, Trade",
+      "amount": 0,
+      "value": 4000,
+      "racePrices": "Orrun Combine:3",
+      "studyDays": 8,
+      "weight": 2,
+      "description": "A ring-shaped seal of polished amber stone, carved with columns of tiny Orrun numerals."
+    }
+  ]
+}

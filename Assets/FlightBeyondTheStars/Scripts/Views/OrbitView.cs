@@ -22,7 +22,7 @@ namespace FBTS
         readonly List<Vector2> ruinAreas = new List<Vector2>();   // search-area centres
         float ruinRadius;                                          // tiles; 0 = ruins not detected
 
-        int Skill => S.scienceSkill;
+        int Skill => S.ScanSkill;   // Keen Sensors trait and sensor artifacts read planets better
         bool CanEstimate => Skill >= GameData.T("ScanEstimateSkill", 40f);
         bool Detailed => Skill >= GameData.T("ScanDetailSkill", 120f);
         bool DetectsRuins => Skill >= GameData.T("ScanRuinsSkill", 100f);
@@ -31,7 +31,8 @@ namespace FBTS
         float RuinRadiusForSkill()
         {
             float t = Mathf.InverseLerp(GameData.T("ScanRuinsSkill", 100f), GameData.T("ScanPreciseSkill", 250f), Skill);
-            return Mathf.Lerp(GameData.T("RuinAreaMaxRadius", 30f), GameData.T("RuinAreaMinRadius", 1.5f), t);
+            float r = Mathf.Lerp(GameData.T("RuinAreaMaxRadius", 30f), GameData.T("RuinAreaMinRadius", 1.5f), t);
+            return Mathf.Max(GameData.T("RuinAreaMinRadius", 1.5f), r * (1f - S.Trait("RuinRadius")));   // Archaeologist
         }
 
         public OrbitView(Planet p, Vector2 returnSpawn)
@@ -180,7 +181,7 @@ namespace FBTS
         void TryLand()
         {
             if (!CanLand(cursor)) { gm.Say($"Can't land in a {terrain.SeaName}. Pick a spot on land."); return; }
-            float cost = Rules.LandingFuel(planet);
+            float cost = Rules.LandingFuel(S, planet);
             if (S.fuel < cost) { gm.Say($"Landing needs {cost:0} fuel; you have {S.fuel:0.0}."); return; }
 
             Vector2 site = cursor;
@@ -204,7 +205,8 @@ namespace FBTS
                 onComplete = () =>
                 {
                     S.fuel -= cost;
-                    S.day += 1;
+                    S.AdvanceDays(1);
+                    Crew.Gain(S, Roles.Science, GameData.T("XpLanding", 1f));
                     gm.FadeColor = Color.black;
                     gm.FadeAlpha = 1f;
                     gm.Go(new SurfaceView(planet, systemReturn, site));
@@ -249,7 +251,7 @@ namespace FBTS
             else GUILayout.Label($"Mineral and life readings need skill {GameData.T("ScanEstimateSkill", 40f):0}.", gm.Hint);
 
             if (planet.inhabitedBy != null)
-                GUILayout.Label(CanEstimate ? $"Cities detected: {planet.inhabitedBy} civilization." : "Faint artificial signals detected.", gm.Label);
+                GUILayout.Label(CanEstimate ? $"Cities detected: {planet.inhabitedBy} civilization (the pale dots on the map)." : "Faint artificial signals detected.", gm.Label);
 
             if (!DetectsRuins)
                 GUILayout.Label($"Ruin detection needs skill {GameData.T("ScanRuinsSkill", 100f):0}.", gm.Hint);
@@ -272,7 +274,7 @@ namespace FBTS
             if (S.current.territory != null) GUILayout.Label($"This system is {S.current.territory} territory.", gm.Hint);
 
             GUILayout.Space(6);
-            float cost = Rules.LandingFuel(planet);
+            float cost = Rules.LandingFuel(S, planet);
             if (gm.Button($"Land here (E) - {cost:0} fuel, 1 day", CanLand(cursor) && S.fuel >= cost)) TryLand();
             GUILayout.FlexibleSpace();
             if (gm.Button("Back to orbit (Esc)")) Cancel();

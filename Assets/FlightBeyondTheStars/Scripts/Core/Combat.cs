@@ -95,6 +95,7 @@ namespace FBTS
         public float escapeTimer;         // seconds spent beyond the arena edge; escape at EscapeTime
         public Transform body;
         public SpriteRenderer bubble;
+        public ShipRig rig;               // painted ships: aims the turrets (null for code-drawn ships)
         public float hitFlash;
 
         public bool Active => !destroyed && !escaped;

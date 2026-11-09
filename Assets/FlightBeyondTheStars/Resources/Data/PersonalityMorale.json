@@ -1,0 +1,279 @@
+{
+  "items": [
+    {
+      "personality": "Brave",
+      "event": "FightWon",
+      "multiplier": 2.0
+    },
+    {
+      "personality": "Cautious",
+      "event": "FightWon",
+      "multiplier": 0.5
+    },
+    {
+      "personality": "Mercenary",
+      "event": "FightWon",
+      "multiplier": 1.5
+    },
+    {
+      "personality": "Stoic",
+      "event": "FightWon",
+      "multiplier": 0.5
+    },
+    {
+      "personality": "Cautious",
+      "event": "FightLost",
+      "multiplier": 1.5
+    },
+    {
+      "personality": "Mercenary",
+      "event": "FightLost",
+      "multiplier": 1.5
+    },
+    {
+      "personality": "Stoic",
+      "event": "FightLost",
+      "multiplier": 0.5
+    },
+    {
+      "personality": "Brave",
+      "event": "Fled",
+      "multiplier": 3.0
+    },
+    {
+      "personality": "Cautious",
+      "event": "Fled",
+      "multiplier": -1.0
+    },
+    {
+      "personality": "Stoic",
+      "event": "Fled",
+      "multiplier": 0.5
+    },
+    {
+      "personality": "Brave",
+      "event": "TalkedDown",
+      "multiplier": 0.0
+    },
+    {
+      "personality": "Cautious",
+      "event": "TalkedDown",
+      "multiplier": 2.0
+    },
+    {
+      "personality": "Principled",
+      "event": "TalkedDown",
+      "multiplier": 1.5
+    },
+    {
+      "personality": "Stoic",
+      "event": "TalkedDown",
+      "multiplier": 0.5
+    },
+    {
+      "personality": "Brave",
+      "event": "Unprovoked",
+      "multiplier": 0.0
+    },
+    {
+      "personality": "Mercenary",
+      "event": "Unprovoked",
+      "multiplier": 0.0
+    },
+    {
+      "personality": "Principled",
+      "event": "Unprovoked",
+      "multiplier": 4.0
+    },
+    {
+      "personality": "Stoic",
+      "event": "Unprovoked",
+      "multiplier": 0.5
+    },
+    {
+      "personality": "Brave",
+      "event": "Mercy",
+      "multiplier": 0.0
+    },
+    {
+      "personality": "Cautious",
+      "event": "Mercy",
+      "multiplier": 1.5
+    },
+    {
+      "personality": "Mercenary",
+      "event": "Mercy",
+      "multiplier": 0.0
+    },
+    {
+      "personality": "Principled",
+      "event": "Mercy",
+      "multiplier": 3.0
+    },
+    {
+      "personality": "Stoic",
+      "event": "Mercy",
+      "multiplier": 0.5
+    },
+    {
+      "personality": "Curious",
+      "event": "Artifact",
+      "multiplier": 2.0
+    },
+    {
+      "personality": "Mercenary",
+      "event": "Artifact",
+      "multiplier": 1.5
+    },
+    {
+      "personality": "Stoic",
+      "event": "Artifact",
+      "multiplier": 0.5
+    },
+    {
+      "personality": "Brave",
+      "event": "Lore",
+      "multiplier": 0.5
+    },
+    {
+      "personality": "Curious",
+      "event": "Lore",
+      "multiplier": 3.0
+    },
+    {
+      "personality": "Mercenary",
+      "event": "Lore",
+      "multiplier": 0.0
+    },
+    {
+      "personality": "Stoic",
+      "event": "Lore",
+      "multiplier": 0.5
+    },
+    {
+      "personality": "Curious",
+      "event": "NewSystem",
+      "multiplier": 3.0
+    },
+    {
+      "personality": "Mercenary",
+      "event": "NewSystem",
+      "multiplier": 0.5
+    },
+    {
+      "personality": "Stoic",
+      "event": "NewSystem",
+      "multiplier": 0.5
+    },
+    {
+      "personality": "Brave",
+      "event": "BigSale",
+      "multiplier": 0.5
+    },
+    {
+      "personality": "Curious",
+      "event": "BigSale",
+      "multiplier": 0.5
+    },
+    {
+      "personality": "Mercenary",
+      "event": "BigSale",
+      "multiplier": 3.0
+    },
+    {
+      "personality": "Stoic",
+      "event": "BigSale",
+      "multiplier": 0.5
+    },
+    {
+      "personality": "Curious",
+      "event": "Salvage",
+      "multiplier": 0.5
+    },
+    {
+      "personality": "Mercenary",
+      "event": "Salvage",
+      "multiplier": 3.0
+    },
+    {
+      "personality": "Principled",
+      "event": "Salvage",
+      "multiplier": 0.5
+    },
+    {
+      "personality": "Stoic",
+      "event": "Salvage",
+      "multiplier": 0.5
+    },
+    {
+      "personality": "Sociable",
+      "event": "ShoreLeave",
+      "multiplier": 1.5
+    },
+    {
+      "personality": "Stoic",
+      "event": "ShoreLeave",
+      "multiplier": 0.5
+    },
+    {
+      "personality": "Mercenary",
+      "event": "CrewDeath",
+      "multiplier": 0.5
+    },
+    {
+      "personality": "Sociable",
+      "event": "CrewDeath",
+      "multiplier": 1.5
+    },
+    {
+      "personality": "Stoic",
+      "event": "CrewDeath",
+      "multiplier": 0.5
+    },
+    {
+      "personality": "Sociable",
+      "event": "CrewSaved",
+      "multiplier": 1.5
+    },
+    {
+      "personality": "Stoic",
+      "event": "CrewSaved",
+      "multiplier": 0.5
+    },
+    {
+      "personality": "Brave",
+      "event": "Injured",
+      "multiplier": 0.5
+    },
+    {
+      "personality": "Cautious",
+      "event": "Injured",
+      "multiplier": 1.5
+    },
+    {
+      "personality": "Stoic",
+      "event": "Injured",
+      "multiplier": 0.5
+    },
+    {
+      "personality": "Stoic",
+      "event": "LevelUp",
+      "multiplier": 0.5
+    },
+    {
+      "personality": "Curious",
+      "event": "LongVoyage",
+      "multiplier": 1.5
+    },
+    {
+      "personality": "Sociable",
+      "event": "LongVoyage",
+      "multiplier": 2.0
+    },
+    {
+      "personality": "Stoic",
+      "event": "LongVoyage",
+      "multiplier": 0.5
+    }
+  ]
+}

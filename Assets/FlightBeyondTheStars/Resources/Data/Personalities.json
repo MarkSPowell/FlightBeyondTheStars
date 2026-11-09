@@ -1,0 +1,32 @@
+{
+  "items": [
+    {
+      "personality": "Brave",
+      "description": "Lives for a good fight. Happy after victories, ashamed when the ship runs."
+    },
+    {
+      "personality": "Cautious",
+      "description": "Prefers to live. Dislikes every fight; relieved when you talk your way out."
+    },
+    {
+      "personality": "Curious",
+      "description": "Here to see the galaxy. Ruins, lore and new systems lift them; long dull stretches wear on them."
+    },
+    {
+      "personality": "Mercenary",
+      "description": "In it for the money. Big sales and salvage please them; shakedowns do not bother them."
+    },
+    {
+      "personality": "Principled",
+      "description": "Has a code. Unprovoked attacks and shakedowns upset them; mercy pleases them."
+    },
+    {
+      "personality": "Sociable",
+      "description": "Needs people. Loves shore leave, takes a crewmate's death hardest, hates long voyages."
+    },
+    {
+      "personality": "Stoic",
+      "description": "Hard to move either way. Every morale change is halved."
+    }
+  ]
+}

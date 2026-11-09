@@ -74,10 +74,29 @@ def main(path, out):
     write("ShipSystems", table(wb["ShipSystems"]))
     write("Weapons", table(wb["Weapons"]))
     write("Upgrades", table(wb["Upgrades"]))
+    if "Artifacts" in wb.sheetnames:
+        write("Artifacts", table(wb["Artifacts"]))
     if "Events" in wb.sheetnames:
         write("Events", table(wb["Events"]))
     if "Encounters" in wb.sheetnames:
         write("Encounters", table(wb["Encounters"]))
+    if "Personalities" in wb.sheetnames:
+        write("Personalities", table(wb["Personalities"]))
+    if "Traits" in wb.sheetnames:
+        write("Traits", table(wb["Traits"]))
+    if "MoraleEvents" in wb.sheetnames:
+        # Matrix (event x personality) -> event rows plus long-format personality multipliers
+        ws = wb["MoraleEvents"]
+        names = [c.value for c in ws[4][3:] if c.value]
+        events, mults = [], []
+        for row in table(ws):
+            events.append({"event": row["event"], "description": row.get("description", ""), "base": float(row["base"])})
+            for n in names:
+                v = row.get(key(n))
+                if v is not None and float(v) != 1.0:
+                    mults.append({"personality": n, "event": row["event"], "multiplier": float(v)})
+        write("MoraleEvents", events)
+        write("PersonalityMorale", mults)
     write("CrewRoles", table(wb["Crew"]))
 
     # Species: caps as a nested list in role order

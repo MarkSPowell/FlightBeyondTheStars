@@ -131,9 +131,12 @@ namespace FBTS
                 {
                     var l = legs[applied];
                     S.fuel = Mathf.Max(0f, S.fuel - l.fuel);
-                    S.day += l.days;
+                    S.AdvanceDays(l.days);
                     S.current = l.to;
+                    if (!l.to.visited) Crew.Morale(S, "NewSystem");
                     l.to.visited = true;
+                    Crew.Gain(S, Roles.Navigator, GameData.T("XpJump", 1.5f));
+                    Crew.Gain(S, Roles.Engineer, GameData.T("XpEngineerJump", 0.5f));
                     fuelUsed += l.fuel;
                     daysUsed += l.days;
                 }
@@ -184,7 +187,7 @@ namespace FBTS
                         spd[i] = 0.6f + (float)rng.NextDouble() * 0.8f;
                         streaks[i] = Draw.Line("Streak", r, c, c + Vector2.right * 0.1f, 0.05f, tint, 2);
                     }
-                    var ship = Draw.Ship("JumpShip", r, new Color(0.4f, 0.9f, 1f), 0.9f);
+                    var ship = Art.Ship("player", "JumpShip", r, new Color(0.4f, 0.9f, 1f), 1.4f);
                     ship.localPosition = c;
                     ship.localRotation = Quaternion.Euler(0, 0, 90);
                     Cam.transform.position = new Vector3(c.x, c.y, -10f);

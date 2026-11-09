@@ -178,13 +178,42 @@ namespace FBTS
             if (!fresh && Controls.Action()) Talk.Choose(Talk.selected);
         }
 
+        // Portraits: Resources/Portraits/<speaker name, lower case, spaces as dashes>, e.g. "factor-venn".
+        readonly System.Collections.Generic.Dictionary<string, Texture2D> portraits =
+            new System.Collections.Generic.Dictionary<string, Texture2D>();
+
+        Texture2D Portrait(string speaker)
+        {
+            if (string.IsNullOrEmpty(speaker)) return null;
+            string key = speaker.Trim().ToLowerInvariant().Replace(' ', '-').Replace("'", "");
+            if (!portraits.TryGetValue(key, out var tex))
+            {
+                tex = Resources.Load<Texture2D>("Portraits/" + key);
+                portraits[key] = tex;
+            }
+            return tex;
+        }
+
         void TalkGui(float w, float h)
         {
-            float ww = Mathf.Min(760f, w - 40f), wh = Mathf.Min(560f, h - 100f);
+            var face = Portrait(Talk.LastSpeaker);
+            const float faceW = 250f;
+            float ww = Mathf.Min(face != null ? 1020f : 760f, w - 40f), wh = Mathf.Min(560f, h - 100f);
             var r = new Rect((w - ww) / 2f, 50f, ww, wh);
             GUI.Box(r, GUIContent.none);
             GUI.Box(r, GUIContent.none);
-            GUILayout.BeginArea(new Rect(r.x + 14, r.y + 10, r.width - 28, r.height - 20));
+
+            // Portrait of whoever is speaking, beside the transcript
+            float left = 0f;
+            if (face != null)
+            {
+                var fr = new Rect(r.x + 14, r.y + 14, faceW, faceW * face.height / Mathf.Max(1f, face.width));
+                if (fr.yMax > r.yMax - 40f) fr.height = r.yMax - 40f - fr.y;
+                GUI.DrawTexture(fr, face, ScaleMode.ScaleAndCrop);
+                GUI.Label(new Rect(fr.x, fr.yMax + 4, faceW, 24), Talk.LastSpeaker, headerStyle);
+                left = faceW + 14f;
+            }
+            GUILayout.BeginArea(new Rect(r.x + 14 + left, r.y + 10, r.width - 28 - left, r.height - 20));
 
             GUILayout.Label(Talk.Title, headerStyle);
             int rep = Talk.Reputation;
@@ -246,9 +275,47 @@ namespace FBTS
             ShowNote($"Captain's log - {State.loreFound.Count} of {GameData.Lore.Length} records", sb.ToString());
         }
 
+        CrewScreen crewScreen;
+        bool openCrew;
+        ArtifactScreen artifactScreen;
+        bool openArtifacts;
+
+        /// <summary>Open the artifacts screen (I).</summary>
+        public void ShowArtifacts()
+        {
+            if (active != null || Talk != null) return;
+            openArtifacts = true;
+        }
+
+        /// <summary>Open the crew screen (C). Applied at the start of the next Update, like other GUI clicks.</summary>
+        public void ShowCrew()
+        {
+            if (active != null || Talk != null) return;
+            openCrew = true;
+        }
+
+        public bool DockedAtStarport => view is SystemView sv && sv.Docked;
+
+        /// <summary>Everyone aboard is dead: report it and start a new game in a new galaxy.</summary>
+        public void GameOver(string what)
+        {
+            int seed = System.Environment.TickCount & 0xffff;
+            ShowNote("All hands lost", what + "\n\nNo one is left aboard. The search will have to begin again, with a new captain " +
+                                       $"in a new galaxy (seed {seed}).");
+            State = GameState.NewGame(seed);
+            FadeColor = Color.black;
+            FadeAlpha = 1f;
+            Go(new SystemView(null));
+            FadeIn(1.5f);
+        }
+
         void Awake()
         {
             GameData.Load();
+            crewScreen = new CrewScreen(this);
+            artifactScreen = new ArtifactScreen(this);
+            Artifacts.OnIdentified = (title, text) => ShowNote(title, text);
+            Crew.Notice = msg => { Toast(msg, 3f); Say(msg); };
             int seed = System.Environment.TickCount & 0xffff;
             State = GameState.NewGame(seed);
             SetupCamera();
@@ -419,8 +486,13 @@ namespace FBTS
             Say($"Loaded {slot}: day {State.day} at {State.current.name}.");
         }
 
+        /// <summary>True after Unity reloaded the scripts during Play mode: the game's state isn't kept
+        /// across a reload, so the game stops and asks for Play mode to be restarted.</summary>
+        bool Reloaded => State == null;
+
         void Update()
         {
+            if (Reloaded) return;
             ApplyPending();
 
             if (fadeInSpeed > 0f && active == null)
@@ -436,9 +508,20 @@ namespace FBTS
                 if (kb.f9Key.wasPressedThisFrame && confirmLoadSlot == null) AskLoad(SaveSystem.QuickSlot);
 #if UNITY_EDITOR
                 // Testing aid (editor only): jump the calendar ahead to reach later threat stages and their news.
+                // Testing aid: bring aboard a random unfound artifact (F8; Shift+F8 identifies everything aboard)
+                if (kb.f8Key.wasPressedThisFrame && Talk == null)
+                {
+                    if (kb.shiftKey.isPressed)
+                        foreach (var a in new System.Collections.Generic.List<OwnedArtifact>(State.artifacts)) Artifacts.Identify(State, a, "Debug.");
+                    else
+                    {
+                        var a = Artifacts.Find(State, new System.Random());
+                        Toast(a != null ? $"Debug: {Artifacts.Name(a)} aboard" : "Debug: every artifact already found", 1.5f);
+                    }
+                }
                 if (kb.f10Key.wasPressedThisFrame && Talk == null)
                 {
-                    State.day += 30;
+                    State.AdvanceDays(30);
                     foreach (var e in WorldEvents.Sync(State)) Say($"News on the open band: {e.name}.");
                     Toast($"Debug: day {State.day}", 1.5f);
                 }
@@ -450,6 +533,21 @@ namespace FBTS
                 ConfirmLoadTick(kb);
                 return; // the question pauses the game
             }
+
+            if (openCrew) { openCrew = false; if (active == null && Talk == null) crewScreen.Show(); }
+            if (crewScreen.Open)
+            {
+                crewScreen.Tick();
+                return; // the crew screen pauses the game
+            }
+            if (kb != null && kb.cKey.wasPressedThisFrame && active == null && Talk == null && !noteOpen && pendingHail == null) ShowCrew();
+            if (openArtifacts) { openArtifacts = false; if (active == null && Talk == null) artifactScreen.Show(); }
+            if (artifactScreen.Open)
+            {
+                artifactScreen.Tick();
+                return; // the artifacts screen pauses the game
+            }
+            if (kb != null && kb.iKey.wasPressedThisFrame && active == null && Talk == null && !noteOpen && pendingHail == null) ShowArtifacts();
 
             if (pendingHail != null && active == null) OpenPendingHail();
             if (Talk != null)
@@ -549,6 +647,12 @@ namespace FBTS
 
         void OnGUI()
         {
+            if (Reloaded)
+            {
+                GUI.Label(new Rect(20, 20, 900, 60),
+                    "Scripts were recompiled while playing, so the game state was lost.\nStop Play mode and press Play again.");
+                return;
+            }
             EnsureStyles();
             float s = UiScale;
             GUI.matrix = Matrix4x4.Scale(new Vector3(s, s, 1));
@@ -561,9 +665,13 @@ namespace FBTS
             string bar = $"Credits {st.credits:N0} cr    Fuel {st.fuel:0.0}/{st.FuelTank:0}    Hull {st.Hull:0}/{st.HullMax:0}    " +
                          $"Cargo {st.CargoUsed:0}/{st.CargoCapacity:0}    Day {st.day}    " +
                          $"Threat: {(stage != null ? stage.name : "-")}    System: {st.current.name}";
-            GUI.Label(new Rect(10, 7, w - 370, 24), bar, labelStyle);
+            GUI.Label(new Rect(10, 7, w - 560, 24), bar, labelStyle);
             bool wasOn = GUI.enabled;
             GUI.enabled = active == null && Talk == null;
+            int pendingTraits = 0;
+            foreach (var m in st.crew) pendingTraits += m.dead ? 0 : m.pendingTraits;
+            if (GUI.Button(new Rect(w - 540, 5, 90, 24), "Artifacts")) ShowArtifacts();
+            if (GUI.Button(new Rect(w - 444, 5, 82, 24), pendingTraits > 0 ? "Crew (!)" : "Crew")) ShowCrew();
             if (GUI.Button(new Rect(w - 356, 5, 66, 24), "Log")) ShowLog();
             if (GUI.Button(new Rect(w - 284, 5, 66, 24), "Save")) QuickSave();
             if (GUI.Button(new Rect(w - 212, 5, 66, 24), "Load")) showLoadMenu = !showLoadMenu;
@@ -575,7 +683,7 @@ namespace FBTS
 
             // Left info panel, filled by the active view (read-only while a transition plays)
             bool was = GUI.enabled;
-            GUI.enabled = active == null && Talk == null;
+            GUI.enabled = active == null && Talk == null && !crewScreen.Open && !artifactScreen.Open;
             GUILayout.BeginArea(new Rect(10, 44, PanelWidth, h - 110), GUI.skin.box);
             view?.Gui();
             GUILayout.EndArea();
@@ -584,6 +692,8 @@ namespace FBTS
             if (showLoadMenu) LoadMenuGui(w, h);
             if (Talk != null) TalkGui(w, h);
             if (noteOpen) NoteGui(w, h);
+            if (crewScreen.Open) crewScreen.Gui(w, h);
+            if (artifactScreen.Open) artifactScreen.Gui(w, h);
             if (confirmLoadSlot != null) ConfirmLoadGui(w, h);
 
             // Fade overlay

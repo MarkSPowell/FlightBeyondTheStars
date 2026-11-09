@@ -1,0 +1,89 @@
+{
+  "items": [
+    {
+      "event": "FightWon",
+      "description": "Won a fight",
+      "base": 3.0
+    },
+    {
+      "event": "FightLost",
+      "description": "Ship disabled and towed",
+      "base": -10.0
+    },
+    {
+      "event": "Fled",
+      "description": "Ran from a fight",
+      "base": -3.0
+    },
+    {
+      "event": "TalkedDown",
+      "description": "Talked our way out of a fight",
+      "base": 3.0
+    },
+    {
+      "event": "Unprovoked",
+      "description": "Attacked or shook down a ship that wasn't hostile",
+      "base": -2.0
+    },
+    {
+      "event": "Mercy",
+      "description": "Accepted a surrender or ceasefire",
+      "base": 1.0
+    },
+    {
+      "event": "Artifact",
+      "description": "Found an artifact",
+      "base": 5.0
+    },
+    {
+      "event": "Lore",
+      "description": "Found a lore record",
+      "base": 2.0
+    },
+    {
+      "event": "NewSystem",
+      "description": "Visited a new star system",
+      "base": 1.0
+    },
+    {
+      "event": "BigSale",
+      "description": "Sold 2,000+ credits of goods at once",
+      "base": 2.0
+    },
+    {
+      "event": "Salvage",
+      "description": "Took salvage after a fight",
+      "base": 1.0
+    },
+    {
+      "event": "ShoreLeave",
+      "description": "Shore leave at a starport",
+      "base": 10.0
+    },
+    {
+      "event": "CrewDeath",
+      "description": "A crewmate died",
+      "base": -15.0
+    },
+    {
+      "event": "CrewSaved",
+      "description": "A critically wounded crewmate was saved",
+      "base": 5.0
+    },
+    {
+      "event": "Injured",
+      "description": "Was injured (this crew member only)",
+      "base": -8.0
+    },
+    {
+      "event": "LevelUp",
+      "description": "Reached a new level (this crew member only)",
+      "base": 5.0
+    },
+    {
+      "event": "LongVoyage",
+      "description": "Each day away from port past the limit",
+      "base": -0.5
+    }
+  ]
+}

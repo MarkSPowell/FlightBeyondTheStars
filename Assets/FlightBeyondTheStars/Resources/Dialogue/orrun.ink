@@ -1,5 +1,5 @@
 // Flight Beyond the Stars - Orrun Combine dialogue
-// Entry points (chosen by the game): station, homeworld
+// Entry points (chosen by the game): station, homeworld, settlement, encounter
 //
 // Conventions the game understands:
 //   "Name: text"      a line spoken by Name (anything else is narration)
@@ -22,6 +22,9 @@ EXTERNAL heard(id)           // true once news of a world event (Events tab) has
 EXTERNAL days_since(id)      // days since a world event happened, or -1 if it hasn't
 EXTERNAL attack()            // ship encounters: their ship opens fire
 EXTERNAL stand_down()        // ship encounters: their ship stops being hostile and leaves
+EXTERNAL crew_reacts(event)  // the crew's morale reacts to what the captain did (MoraleEvents tab id)
+EXTERNAL has_artifact(id)    // true if this major artifact (Artifacts tab id) is aboard and identified
+EXTERNAL give_artifact(id)   // hand it over (quests); false if it isn't aboard
 
 VAR posture = "friendly"
 VAR comms = 60
@@ -108,6 +111,7 @@ Factor Venn: That was a joke. Maxim Twelve: the first joke is also complimentary
 + { reputation >= 10 } [Do you know anything about ruins on these worlds?] -> history_offer
 + { knows("first-watch") || knows("humans-1") } [What do you know about the First Watch?] -> first_watch
 + { knows("varkesh") } [Tell me about the Varkesh.] -> varkesh
++ { has_artifact("founding_seal") && not seal_venn } [I found an old Orrun seal in some ruins.] -> seal_venn
 + [Any news?] -> recap
 + [That's all for now.] -> goodbye
 
@@ -269,6 +273,24 @@ Factor Venn: News is cheaper than charts, so here is the short version.
 }
 -> topics
 
+= seal_venn
+Factor Venn's throat sac drains from gold to a startled grey.
+Factor Venn: Put that away. Slowly. Do you know what that is? No, of course you do not, or you would be holding it with both hands.
+Factor Venn: That is the Founding Seal of the Ledger. The Council lost it three hundred years ago and has been pretending ever since that they did not.
+Factor Venn: I can buy it from you. Nine thousand credits, which is robbery, but I would be the one going to prison for it. Or you can take it to the Ledger Council yourself. A debt owed by the Council is worth more than money, Captain. Maxim One.
++ [Sell it to Venn for 9,000 credits.]
+    { give_artifact("founding_seal"):
+        ~ receive(9000)
+        ~ shift(5)
+        Factor Venn: A pleasure. A terrifying pleasure. Speak of this to no one, and I will speak of you to everyone, warmly.
+    }
+    -> topics
++ [I'll take it to the Ledger Council.]
+    Factor Venn: Wise. Expensive for me, but wise. Go to the homeworld and tell the clerk Factor Venn sent you with "the book's own mark". They will open the door.
+    ~ learn("council")
+    ~ shift(3)
+    -> topics
+
 = goodbye
 { hostile():
     Factor Venn: Leaving already? I will bill you for the silence.
@@ -307,6 +329,7 @@ Councillor Thessaly: He did not? Then he believes it matters. So do we.
 = council_topics
 + [What was the First Watch?] -> watch_story
 + { watch_story } [What is the debt?] -> the_debt
++ { has_artifact("founding_seal") && not seal_council } [Offer the Founding Seal of the Ledger.] -> seal_council
 + [Thank you, Councillor.] -> farewell
 
 = watch_story
@@ -330,6 +353,33 @@ Councillor Thessaly: The Combine does not forget a debt, Captain. But we are pat
 }
 ~ learn("the-debt")
 -> council_topics
+
+= seal_council
+The five councillors rise together. Nobody speaks for a long moment.
+Councillor Thessaly: The book's own mark. We had stopped believing it still existed.
+{ not the_debt:
+    Councillor Thessaly: Your ancestors left a debt in our ledger, Captain: our silence, never paid for. This seal is worth that silence twice over.
+}
+Councillor Thessaly: We accept it as payment in full. And so the silence is ended.
++ [Hand over the seal.]
+    { give_artifact("founding_seal"):
+        ~ shift(25)
+        ~ learn("the-debt")
+        Councillor Thessaly: Hear it, then. The ships from the dark were running from something they had made themselves.
+        Councillor Thessaly: They would not name it. They said only that it was patient, that it would never stop looking, and that if it ever found this galaxy, we should close every door we had.
+        Councillor Thessaly: We laughed, Captain. Orrun do not close doors. Doors are where customers come from.
+        ~ learn("they-made-it")
+        { comms >= 120:
+            Comms Officer: (quietly) Captain, the verb for "made" is the one they use for children, not for tools.
+        }
+        ~ give_lore("Orrun Combine")
+    - else:
+        Councillor Thessaly: You hesitate. Keep it, then, until you are sure.
+    }
+    -> council_topics
++ [Not yet.]
+    Councillor Thessaly: The ledger is patient. It has had practice.
+    -> council_topics
 
 = council_news
 { heard("mother-signal") && not council_signal:
@@ -462,6 +512,7 @@ Trader Pell: Greetings, greetings! The freighter Ninth Margin, under contract to
     -> shakedown
 
 = shakedown
+~ crew_reacts("Unprovoked")
 { odds >= 150:
     Trader Pell: ...Very well. Take it. I will be filing a complaint. With everyone. In writing.
     ~ receive(400)
@@ -480,6 +531,7 @@ Trader Pell: Greetings, greetings! The freighter Ninth Margin, under contract to
     + [Accept the five hundred.]
         ~ receive(500)
         ~ shift(-5)
+        ~ crew_reacts("Mercy")
         ~ stand_down()
         Trader Pell: A pleasure doing business. Mostly.
         -> END
@@ -496,3 +548,65 @@ Trader Pell: Greetings, greetings! The freighter Ninth Margin, under contract to
         Trader Pell: Then may your insurance be better than mine.
         -> END
 }
+
+// ------------------------------------------------------------------ a settlement on the Orrun world
+// Unnamed locals, met by driving the rover into town. Trading is done on the game's market screen.
+
+=== settlement ===
+{ reputation <= -40:
+    Stall-keeper: Closed accounts get closed shutters, sky customer. Good day.
+    -> END
+}
+{ settlement == 1:
+    A crowded market square, every stall roofed in a different colour. A plump Orrun with an abacus in each of three hands spots your rover and waves the fourth.
+    Stall-keeper: A rover! From orbit! Customers who come down from the sky always have the most interesting things to sell, and the least idea what they are worth.
+- else:
+    Stall-keeper: The sky customer returns! I kept your corner of the square warm. Figuratively. Heating is extra.
+}
+{
+- fawning():
+    Stall-keeper: Such manners. You will do well here, or at least be robbed politely.
+    ~ shift(1)
+- hostile():
+    Stall-keeper: No need to glare. Glaring is free; everything else has a price.
+    ~ shift(-2)
+}
+-> town_talk
+
+= town_talk
++ [How is business in town?] -> town_mood
++ [Do you buy artifacts?] -> town_artifacts
++ { has_artifact("founding_seal") && not town_seal } [Do you recognise this seal?] -> town_seal
++ [Goodbye.] -> town_bye
+
+= town_mood
+{
+- heard("stage-4"):
+    Stall-keeper: Half the stalls are shuttered. The lanes are cut and the caravans do not come. We sell to each other now, which is like eating your own coat.
+- heard("stage-3"):
+    Stall-keeper: Prices go up every week. Fuel most of all. The factors say it is the failing lanes. The factors say a lot of things, at a fee.
+- heard("stage-2"):
+    Stall-keeper: Nervous. The rim houses stopped answering their mail. An Orrun who stops answering mail is either dead or bankrupt, and we are not sure which is worse.
+- else:
+    Stall-keeper: Good! Busy! Too busy to be talking to you, which is why I am charging for it. That was a joke. Probably.
+}
+{ heard("first-artifact"):
+    Stall-keeper: And everyone is digging in old ruins since word got round that a sky ship found something real. Mostly they find old pots. I sell the pots.
+}
+-> town_talk
+
+= town_artifacts
+Stall-keeper: Little curios, yes, at little prices. A real relic? Take it up to the factors at Brightmarket, who pay properly. Or to the Noeti, who pay improperly well.
+Stall-keeper: But if you ever find anything with columns of tiny numbers carved into it, come straight to me. I will faint, and then I will pay.
+-> town_talk
+
+= town_seal
+The stall-keeper looks at the seal and sits down very suddenly on a crate of melons.
+Stall-keeper: That is the Founding Seal of the Ledger. Put it away! I cannot afford to have seen it.
+Stall-keeper: It belongs to the Ledger Council. Take it to them, not to me. Tell their clerk it is "the book's own mark", and the door will open.
+~ learn("council")
+-> town_talk
+
+= town_bye
+Stall-keeper: Come back with full holds and empty pockets, sky customer!
+-> END

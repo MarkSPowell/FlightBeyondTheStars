@@ -183,6 +183,134 @@
     {
       "key": "FreeFlightLyPerDay",
       "value": 1.0
+    },
+    {
+      "key": "LevelFirst",
+      "value": 30.0
+    },
+    {
+      "key": "LevelStep",
+      "value": 15.0
+    },
+    {
+      "key": "XpWeaponsShot",
+      "value": 0.03
+    },
+    {
+      "key": "XpWeaponsHit",
+      "value": 0.03
+    },
+    {
+      "key": "XpPilotSecond",
+      "value": 0.1
+    },
+    {
+      "key": "XpScan",
+      "value": 1.5
+    },
+    {
+      "key": "XpLanding",
+      "value": 2.0
+    },
+    {
+      "key": "XpJump",
+      "value": 2.5
+    },
+    {
+      "key": "XpEngineerJump",
+      "value": 1.2
+    },
+    {
+      "key": "XpCommsLine",
+      "value": 0.6
+    },
+    {
+      "key": "XpTrade",
+      "value": 1.0
+    },
+    {
+      "key": "XpMedicalDay",
+      "value": 1.0
+    },
+    {
+      "key": "XpMedicalSave",
+      "value": 3.0
+    },
+    {
+      "key": "MoraleStart",
+      "value": 60.0
+    },
+    {
+      "key": "MoraleDrift",
+      "value": 1.0
+    },
+    {
+      "key": "LongVoyageDays",
+      "value": 30.0
+    },
+    {
+      "key": "LeaveMorale",
+      "value": 10.0
+    },
+    {
+      "key": "InjuryPerDamage",
+      "value": 0.004
+    },
+    {
+      "key": "InjuryHealthPerDamage",
+      "value": 1.0
+    },
+    {
+      "key": "HealPerDay",
+      "value": 4.0
+    },
+    {
+      "key": "SaveChanceBase",
+      "value": 0.25
+    },
+    {
+      "key": "SaveChanceMax",
+      "value": 0.5
+    },
+    {
+      "key": "HireBase",
+      "value": 1500.0
+    },
+    {
+      "key": "HirePerPoint",
+      "value": 20.0
+    },
+    {
+      "key": "XpEngineerSecond",
+      "value": 0.04
+    },
+    {
+      "key": "MajorArtifactChance",
+      "value": 0.06
+    },
+    {
+      "key": "XpArtifactStudyDay",
+      "value": 0.3
+    },
+    {
+      "key": "XpArtifactFind",
+      "value": 2.0
+    },
+    {
+      "key": "SettlementPriceFactor",
+      "value": 0.85
+    },
+    {
+      "key": "SettlementRoverFuelPrice",
+      "value": 40.0
+    },
+    {
+      "key": "MinorArtifactChance",
+      "value": 0.08
+    },
+    {
+      "key": "Act2Stage",
+      "value": 2.0
     }
   ]
 }

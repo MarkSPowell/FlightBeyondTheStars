@@ -27,6 +27,8 @@ namespace FBTS
         public readonly List<Line> transcript = new List<Line>();
         public readonly List<string> choices = new List<string>();
         public int selected;
+        /// <summary>The alien speaking most recently (for the portrait), or null before anyone has spoken.</summary>
+        public string LastSpeaker { get; private set; }
 
         GameState S => gm.State;
 
@@ -148,6 +150,11 @@ namespace FBTS
             // Ship encounters: the other ship opens fire, or backs off
             story.BindExternalFunction("attack", () => { onAttack?.Invoke(); });
             story.BindExternalFunction("stand_down", () => { onStandDown?.Invoke(); });
+            // The crew reacts to what the captain just did (a MoraleEvents id, such as "Mercy")
+            story.BindExternalFunction("crew_reacts", (string evt) => { Crew.Morale(S, evt); });
+            // Major artifacts: aboard and identified? hand one over (quests)
+            story.BindExternalFunction("has_artifact", (string id) => Artifacts.Owns(S, id), true);
+            story.BindExternalFunction("give_artifact", (string id) => Artifacts.Give(S, id));
         }
 
         void SetVar(string name, object value)
@@ -158,7 +165,7 @@ namespace FBTS
         void PushVariables()
         {
             SetVar("posture", posture);
-            SetVar("comms", S.commsSkill);
+            SetVar("comms", S.commsSkill + Mathf.RoundToInt(S.Trait("DialogueSkill")));   // Linguist
             SetVar("credits", Mathf.FloorToInt(S.credits));
             SetVar("reputation", S.Rep(race));
             if (extraVars != null) foreach (var kv in extraVars) SetVar(kv.Key, kv.Value);
@@ -183,6 +190,7 @@ namespace FBTS
                 transcript.Add(m.Success
                     ? new Line { speaker = m.Groups[1].Value, text = m.Groups[2].Value }
                     : new Line { text = text });
+                if (m.Success && m.Groups[1].Value != "Comms Officer") LastSpeaker = m.Groups[1].Value;
             }
             choices.Clear();
             foreach (var c in story.currentChoices) choices.Add(c.text);
@@ -194,6 +202,7 @@ namespace FBTS
         {
             if (index < 0 || index >= choices.Count) return;
             transcript.Add(new Line { speaker = "Captain", text = choices[index], captain = true });
+            Crew.Gain(S, Roles.Comms, GameData.T("XpCommsLine", 0.3f));
             PushVariables();   // credits or skills may have changed since the last line
             story.ChooseChoiceIndex(index);
             Advance();
@@ -214,6 +223,7 @@ namespace FBTS
             {
                 if (l.race != forRace || S.loreFound.Contains(l.id)) continue;
                 S.loreFound.Add(l.id);
+                Crew.Morale(S, "Lore");
                 gm.Toast($"Captain's log: {l.title}", 3f);
                 return l.title;
             }
